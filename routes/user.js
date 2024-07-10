@@ -1,6 +1,7 @@
 const { User } = require('../models/user');
 const { Shop } = require('../models/shop.js');
 const { ImageUpload } = require('../models/imageUpload');
+const { sendVerificationEmail } = require('../helper/sendVerificationEmail.js')
 
 const express = require('express');
 const router = express.Router();
@@ -39,10 +40,10 @@ const upload = multer({ storage: storage })
 
 
 router.post(`/upload`, upload.array("images"), async (req, res) => {
-    imagesArr=[];
+    imagesArr = [];
 
-    try{
-    
+    try {
+
         for (let i = 0; i < req?.files?.length; i++) {
 
             const options = {
@@ -50,7 +51,7 @@ router.post(`/upload`, upload.array("images"), async (req, res) => {
                 unique_filename: false,
                 overwrite: false,
             };
-    
+
             const img = await cloudinary.uploader.upload(req.files[i].path, options,
                 function (error, result) {
                     imagesArr.push(result?.secure_url);
@@ -66,9 +67,9 @@ router.post(`/upload`, upload.array("images"), async (req, res) => {
         imagesUploaded = await imagesUploaded.save();
         return res.status(200).json(imagesArr);
 
-       
 
-    }catch(error){
+
+    } catch (error) {
         console.log(error);
     }
 
@@ -78,131 +79,248 @@ router.post(`/upload`, upload.array("images"), async (req, res) => {
 
 
 
+// router.post(`/signup`, async (req, res) => {
+//     const { name, phone, email, password, isAdmin } = req.body;
+
+//     try {
+
+//         const existingVerifiedUser = await User.findOne({
+//             email: email,
+//             isVerified: true,
+//         });
+//         const existingUserByPh = await User.findOne({ phone: phone });
+
+//         if (existingVerifiedUser && existingUserByPh) {
+//             return res.status(400).json({ error: true, msg: "user already exist!" })
+//         }
+
+//         const existingUserByEmail = await User.findOne({
+//             email,
+//         });
+
+//         const verifyCodeEmail = Math.floor(
+//             100000 + Math.random() * 900000
+//         ).toString();
+
+//         if (existingUserByEmail) {
+//             if (existingUserByEmail.isVerified) {
+//                 return res.status(400).json({ error: true, msg: "user already exist!" })
+//             } else {
+//                 const hashPassword = await bcrypt.hash(password, 10);
+//                 existingUserByEmail.password = hashPassword
+//                 existingUserByEmail.verifyCode = verifyCodeEmail
+//                 existingUserByEmail.verifyCodeExpiry = new Date(Date.now() + 3600000)
+//             }
+//         } else {
+//             const hashPassword = await bcrypt.hash(password, 10);
+//             const expiryDate = new Date();
+//             expiryDate.setHours(expiryDate.getHours() + 1);
+//             const result = await User.create({
+//                 name: name,
+//                 phone: phone,
+//                 email: email,
+//                 verifyCode: verifyCodeEmail,
+//                 verifyCodeExpiry: expiryDate,
+//                 isVerified: false,
+//                 password: hashPassword,
+//                 isAdmin: isAdmin
+//             });
+
+//             // Create a shop for the user
+//             let shop = await Shop.create({
+//                 name: `${name}'s Shop`,
+//                 owner: result._id
+//             });
+//             const token = jwt.sign({ email: result.email, id: result._id }, process.env.JSON_WEB_TOKEN_SECRET_KEY);
+
+//             res.status(200).json({
+//                 user: result,
+//                 shop: shop,
+//                 token: token
+//             })
+//         }
+
+//         // send verification email
+//         const emailResponse = await sendVerificationEmail(
+//             email,
+//             name,
+//             verifyCodeEmail
+//         )
+
+//         if (!emailResponse.success) {
+//             return res.status(500).json({
+//                 success: false,
+//                 message: emailResponse.message
+//             })
+//         }
+
+//         return res.status(201).json({
+//             success: true,
+//             message: "User Registered successfully please verify your email"
+//         })
+
+
+
+//     } catch (error) {
+//         console.log(error);
+//         res.status(500).json({ error: true, msg: "something went wrong" });
+//     }
+// })
 router.post(`/signup`, async (req, res) => {
     const { name, phone, email, password, isAdmin } = req.body;
 
     try {
-
-        const existingUser = await User.findOne({ email: email });
+        const existingVerifiedUser = await User.findOne({ email: email, isVerified: true });
         const existingUserByPh = await User.findOne({ phone: phone });
 
-        if (existingUser && existingUserByPh) {
-           return res.status(400).json({error:true, msg: "user already exist!" })
+        if (existingVerifiedUser) {
+            return res.status(400).json({ error: true, msg: "User already exists!" });
         }
 
-        const hashPassword = await bcrypt.hash(password,10);
+        const existingUserByEmail = await User.findOne({ email });
+        const verifyCodeEmail = Math.floor(100000 + Math.random() * 900000).toString();
 
-        const result = await User.create({
-            name:name,
-            phone:phone,
-            email:email,
-            password:hashPassword,
-            isAdmin:isAdmin
-        });
+        let result;
+        if (existingUserByEmail) {
+            if (existingUserByEmail.isVerified) {
+                return res.status(400).json({ error: true, msg: "User already exists!" });
+            } else {
+                const hashPassword = await bcrypt.hash(password, 10);
+                existingUserByEmail.password = hashPassword;
+                existingUserByEmail.verifyCode = verifyCodeEmail;
+                existingUserByEmail.verifyCodeExpiry = new Date(Date.now() + 3600000);
+                result = await existingUserByEmail.save();
+            }
+        } else {
+            const hashPassword = await bcrypt.hash(password, 10);
+            const expiryDate = new Date();
+            expiryDate.setHours(expiryDate.getHours() + 1);
+            result = await User.create({
+                name: name,
+                phone: phone,
+                email: email,
+                verifyCode: verifyCodeEmail,
+                verifyCodeExpiry: expiryDate,
+                isVerified: false,
+                password: hashPassword,
+                isAdmin: isAdmin
+            });
+        }
 
-         // Create a shop for the user
-         let shop = await Shop.create({
+        // Create a shop for the user
+        const shop = await Shop.create({
             name: `${name}'s Shop`,
             owner: result._id
         });
 
-        const token = jwt.sign({email:result.email, id: result._id}, process.env.JSON_WEB_TOKEN_SECRET_KEY);
+        const token = jwt.sign({ email: result.email, id: result._id }, process.env.JSON_WEB_TOKEN_SECRET_KEY);
 
-        res.status(200).json({
-            user:result,
-            shop: shop,
-            token:token
-        })
+        // send verification email
+        const emailResponse = await sendVerificationEmail(email, name, verifyCodeEmail);
+
+        if (!emailResponse.success) {
+            return res.status(500).json({
+                success: false,
+                message: emailResponse.message
+            });
+        }
+
+        return res.status(201).json({
+            success: true,
+            message: "User registered successfully. Please verify your email.",
+            token: token,
+            user: result,
+            shop: shop
+        });
 
     } catch (error) {
         console.log(error);
-        res.status(500).json({error:true, msg:"something went wrong"});
+        return res.status(500).json({ error: true, msg: "Something went wrong." });
     }
-})
-
+});
 
 router.post(`/signin`, async (req, res) => {
-    const {email, password} = req.body;
+    const { email, password } = req.body;
 
-    try{
+    try {
 
-        const existingUser = await User.findOne({ email: email });
-        if(!existingUser){
-            res.status(404).json({error:true, msg:"User not found!"})
-            return 
+        const existingUser = await User.findOne({ email: email, isVerified: true });
+        if (!existingUser) {
+            res.status(404).json({ error: true, msg: "User not found" })
+            return
         }
 
         const matchPassword = await bcrypt.compare(password, existingUser.password);
 
-        if(!matchPassword){
-            return res.status(400).json({error:true,msg:"Invailid credentials"})
+        if (!matchPassword) {
+            return res.status(400).json({ error: true, msg: "Invailid Password" })
         }
 
         const shop = await Shop.findOne({ owner: existingUser._id });
 
-        const token = jwt.sign({email:existingUser.email, id: existingUser._id}, process.env.JSON_WEB_TOKEN_SECRET_KEY);
+        const token = jwt.sign({ email: existingUser.email, id: existingUser._id }, process.env.JSON_WEB_TOKEN_SECRET_KEY);
 
         console.log({
-            user:existingUser,
-            token:token,
+            user: existingUser,
+            token: token,
             shop: shop,
-            msg:"user Authenticated"
+            msg: "user Authenticated"
         })
 
-       return res.status(200).send({
-            user:existingUser,
-            token:token,
+        return res.status(200).send({
+            user: existingUser,
+            token: token,
             shop: shop,
-            msg:"user Authenticated"
+            msg: "user Authenticated"
         })
 
-    }catch (error) {
-        res.status(500).json({error:true,msg:"something went wrong"});
+    } catch (error) {
+        res.status(500).json({ error: true, msg: "something went wrong" });
     }
 
 })
 
 router.put(`/changePassword/:id`, async (req, res) => {
-   
+
     const { name, phone, email, password, newPass, images } = req.body;
 
-   // console.log(req.body)
+    // console.log(req.body)
 
     const existingUser = await User.findOne({ email: email });
-    if(!existingUser){
-        res.status(404).json({error:true, msg:"User not found!"})
+    if (!existingUser) {
+        res.status(404).json({ error: true, msg: "User not found!" })
     }
 
     const matchPassword = await bcrypt.compare(password, existingUser.password);
 
-    if(!matchPassword){
-        return res.json({error:true,msg:"current password wrong"})
-    }else{
+    if (!matchPassword) {
+        return res.json({ error: true, msg: "current password wrong" })
+    } else {
 
         let newPassword
 
-        if(newPass) {
+        if (newPass) {
             newPassword = bcrypt.hashSync(newPass, 10)
         } else {
             newPassword = existingUser.passwordHash;
         }
-    
-        
+
+
         const user = await User.findByIdAndUpdate(
             req.params.id,
             {
-                name:name,
-                phone:phone,
-                email:email,
-                password:newPassword,
+                name: name,
+                phone: phone,
+                email: email,
+                password: newPassword,
                 images: images,
             },
-            { new: true}
+            { new: true }
         )
-    
-        if(!user)
-        return res.status(400).send('the user cannot be Updated!')
-    
+
+        if (!user)
+            return res.status(400).send('the user cannot be Updated!')
+
         res.send(user);
     }
 
@@ -212,46 +330,46 @@ router.put(`/changePassword/:id`, async (req, res) => {
 
 
 
-router.get(`/`, async (req, res) =>{
+router.get(`/`, async (req, res) => {
     const userList = await User.find();
 
-    if(!userList) {
-        res.status(500).json({success: false})
-    } 
+    if (!userList) {
+        res.status(500).json({ success: false })
+    }
     res.send(userList);
 })
 
-router.get('/:id', async(req,res)=>{
+router.get('/:id', async (req, res) => {
     const user = await User.findById(req.params.id);
 
-    if(!user) {
-        res.status(500).json({message: 'The user with the given ID was not found.'})
-    } 
+    if (!user) {
+        res.status(500).json({ message: 'The user with the given ID was not found.' })
+    }
     res.status(200).send(user);
 })
 
 
-router.delete('/:id', (req, res)=>{
-    User.findByIdAndDelete(req.params.id).then(user =>{
-        if(user) {
-            return res.status(200).json({success: true, message: 'the user is deleted!'})
+router.delete('/:id', (req, res) => {
+    User.findByIdAndDelete(req.params.id).then(user => {
+        if (user) {
+            return res.status(200).json({ success: true, message: 'the user is deleted!' })
         } else {
-            return res.status(404).json({success: false , message: "user not found!"})
+            return res.status(404).json({ success: false, message: "user not found!" })
         }
-    }).catch(err=>{
-       return res.status(500).json({success: false, error: err}) 
+    }).catch(err => {
+        return res.status(500).json({ success: false, error: err })
     })
 })
 
 
 
 
-router.get(`/get/count`, async (req, res) =>{
+router.get(`/get/count`, async (req, res) => {
     const userCount = await User.countDocuments()
 
-    if(!userCount) {
-        res.status(500).json({success: false})
-    } 
+    if (!userCount) {
+        res.status(500).json({ success: false })
+    }
     res.send({
         userCount: userCount
     });
@@ -259,13 +377,13 @@ router.get(`/get/count`, async (req, res) =>{
 
 
 
-router.put('/:id',async (req, res)=> {
+router.put('/:id', async (req, res) => {
 
     const { name, phone, email } = req.body;
 
     const userExist = await User.findById(req.params.id);
 
-    if(req.body.password) {
+    if (req.body.password) {
         newPassword = bcrypt.hashSync(req.body.password, 10)
     } else {
         newPassword = userExist.passwordHash;
@@ -274,17 +392,17 @@ router.put('/:id',async (req, res)=> {
     const user = await User.findByIdAndUpdate(
         req.params.id,
         {
-            name:name,
-            phone:phone,
-            email:email,
-            password:newPassword,
+            name: name,
+            phone: phone,
+            email: email,
+            password: newPassword,
             images: imagesArr,
         },
-        { new: true}
+        { new: true }
     )
 
-    if(!user)
-    return res.status(400).send('the user cannot be Updated!')
+    if (!user)
+        return res.status(400).send('the user cannot be Updated!')
 
     res.send(user);
 })
@@ -297,7 +415,7 @@ router.put('/:id',async (req, res)=> {
 //     const userExist = await User.findById(req.params.id);
 
 //     let newPassword
-    
+
 //     if(req.body.password) {
 //         newPassword = bcrypt.hashSync(req.body.password, 10)
 //     } else {
@@ -327,21 +445,21 @@ router.put('/:id',async (req, res)=> {
 router.delete('/deleteImage', async (req, res) => {
     const imgUrl = req.query.img;
 
-   // console.log(imgUrl)
+    // console.log(imgUrl)
 
     const urlArr = imgUrl.split('/');
-    const image =  urlArr[urlArr.length-1];
-  
+    const image = urlArr[urlArr.length - 1];
+
     const imageName = image.split('.')[0];
 
-    const response = await cloudinary.uploader.destroy(imageName, (error,result)=>{
-       // console.log(error, res)
+    const response = await cloudinary.uploader.destroy(imageName, (error, result) => {
+        // console.log(error, res)
     })
 
-    if(response){
+    if (response) {
         res.status(200).send(response);
     }
-      
+
 });
 
 

@@ -4,6 +4,8 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const mongoose = require('mongoose');
 require('dotenv/config');
+const events = require('events');
+events.EventEmitter.defaultMaxListeners = 20;
 // const authJwt = require('./helper/jwt.js');
 
 app.use(cors());
@@ -36,6 +38,7 @@ const ordersSchema = require('./routes/orders.js');
 const homeBannerSchema = require('./routes/homeBanner.js');
 const searchRoutes = require('./routes/search.js');
 const shopRoutes = require('./routes/shop.js');
+const verifyCodeRoute = require('./routes/verifyCode.js');
 
 
 
@@ -56,6 +59,7 @@ app.use(`/api/orders`, ordersSchema);
 app.use(`/api/homeBanner`, homeBannerSchema);
 app.use(`/api/search`, searchRoutes);
 app.use(`/api/shop`, shopRoutes);
+app.use(`/api/verify-code`, verifyCodeRoute);
 
 // Database connection
 mongoose.connect(process.env.MONGO_URI,

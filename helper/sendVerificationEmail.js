@@ -1,19 +1,24 @@
-import { resend } from "../lib/resend";
-import VerificationEmail from "../emails/VerificationEmail";
+const { resend } = require("../lib/resend");
+const {VerificationEmail} = require("../emails/VerificationEmail.jsx")
 
 
-export async function sendVerificationEmail(
-){
+const sendVerificationEmail = async (
+  email,
+  name,
+  verifyCode
+) => {
   try {
     await resend.emails.send({
-      from: 'send@noreply.botax.me',
+      from: 'raheeqgillofficail@resend.dev',
       to: email,
       subject: 'Feedback system | Verification code',
-      react: VerificationEmail({username, otp: verifyCode}),
+      react: VerificationEmail({ name, otp: verifyCode }),
     });
-    return { success: true, message: 'Verification email send successfully'}
+    return { success: true, message: 'Verification email send successfully' }
   } catch (emailError) {
     console.error(`Error sending verification email ${emailError}`)
-    return { success: false, message: 'Failed to send verification email'}
+    return { success: false, message: 'Failed to send verification email' }
   }
 }
+
+module.exports = { sendVerificationEmail }
