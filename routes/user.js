@@ -206,12 +206,14 @@ router.post(`/signup`, async (req, res) => {
                 isAdmin: isAdmin
             });
         }
-
+        let shop;
         // Create a shop for the user
-        const shop = await Shop.create({
-            name: `${name}'s Shop`,
-            owner: result._id
-        });
+        if(result.isAdmin === true){
+             shop = await Shop.create({
+                name: `${name}'s Shop`,
+                owner: result._id
+            });
+        }
 
         const token = jwt.sign({ email: result.email, id: result._id }, process.env.JSON_WEB_TOKEN_SECRET_KEY);
 

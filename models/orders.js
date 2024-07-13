@@ -75,10 +75,13 @@ const ordersSchema = mongoose.Schema({
     },
     status:{
         type:String,
-        default:"pending"
+        enum: ["Pending","Confirm","Shipped","Delivered", "Cancelled"],
+        default:"Pending"
     },
-    
-    // shop: { type: mongoose.Schema.Types.ObjectId, ref: 'Shop', required: true },
+    cancellationReason: {
+        type: String,
+        default: ''
+    },
     date: {
         type: Date,
         default: Date.now,
