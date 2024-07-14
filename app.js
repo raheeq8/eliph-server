@@ -39,6 +39,7 @@ const homeBannerSchema = require('./routes/homeBanner.js');
 const searchRoutes = require('./routes/search.js');
 const shopRoutes = require('./routes/shop.js');
 const verifyCodeRoute = require('./routes/verifyCode.js');
+const sellerRoutes = require('./routes/seller.js');
 
 
 
@@ -60,6 +61,7 @@ app.use(`/api/homeBanner`, homeBannerSchema);
 app.use(`/api/search`, searchRoutes);
 app.use(`/api/shop`, shopRoutes);
 app.use(`/api/verify-code`, verifyCodeRoute);
+app.use('/api/seller', sellerRoutes);
 
 // Database connection
 mongoose.connect(process.env.MONGO_URI,
