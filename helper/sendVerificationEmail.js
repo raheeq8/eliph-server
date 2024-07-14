@@ -11,7 +11,7 @@ const sendVerificationEmail = async (
     await resend.emails.send({
       from: 'raheeqgillofficail@resend.dev',
       to: email,
-      subject: 'Feedback system | Verification code',
+      subject: 'Eliph Store | Verification code',
       react: VerificationEmail({ name, otp: verifyCode }),
     });
     return { success: true, message: 'Verification email send successfully' }
