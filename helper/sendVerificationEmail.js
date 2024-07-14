@@ -9,7 +9,7 @@ const sendVerificationEmail = async (
 ) => {
   try {
     await resend.emails.send({
-      from: 'raheeqgillofficail@resend.dev',
+      from: 'Eliph Store <noreply@eliphstore.com>',
       to: email,
       subject: 'Eliph Store | Verification code',
       react: VerificationEmail({ name, otp: verifyCode }),
