@@ -1,6 +1,4 @@
 const { Category } = require('../models/caregory.model');
-const { Shop } = require('../models/shop.js');
-const { User } = require('../models/user');
 const { Product } = require('../models/product.model')
 const express = require('express');
 const router = express.Router();
@@ -8,11 +6,9 @@ const multer = require('multer')
 const fs = require('fs');
 const { ImageUpload } = require('../models/imageUpload');
 const { RecentlyViewd } = require('../models/recentlyViewd.js');
-const authMiddleware = require('../middleware/auth.js');
-
-
 
 const cloudinary = require('cloudinary').v2;
+
 
 
 cloudinary.config({
@@ -21,64 +17,122 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_CLOUD_SECRET,
     secure: true
 });
-
-
 var imagesArr = [];
+// const storage = multer.diskStorage({
 
+//     destination: function (req, file, cb) {
+//         cb(null, "uploads");
+//     },
+//     filename: function (req, file, cb) {
+//         cb(null, `${Date.now()}_${file.originalname}`);
+
+//     },
+// })
+
+
+// const upload = multer({ storage: storage })
+
+// router.post(`/upload`, upload.array("images"), async (req, res) => {
+//     imagesArr = [];
+//     try {
+//         for (let i = 0; i < req .files?.length; i++) {
+
+//             const options = {
+//                 use_filename: true,
+//                 unique_filename: false,
+//                 overwrite: false,
+//             };
+
+//             const img = await cloudinary.uploader.upload(req.files[i].path, options,
+//                 function (error, result) {
+//                     imagesArr.push(result.secure_url);
+//                     fs.unlinkSync(`uploads/${req.files[i].filename}`);
+//                 });
+//         }
+
+//         let imagesUploaded = new ImageUpload({
+//             images: imagesArr,
+//         });
+
+//         imagesUploaded = await imagesUploaded.save();
+
+//         return res.status(200).json(imagesArr);
+
+//     } catch (error) {
+//         console.log(error);
+//     }
+
+
+// });
 
 
 const storage = multer.diskStorage({
-
     destination: function (req, file, cb) {
         cb(null, "uploads");
     },
     filename: function (req, file, cb) {
         cb(null, `${Date.now()}_${file.originalname}`);
-        //imagesArr.push(`${Date.now()}_${file.originalname}`)
-        //console.log(file.originalname)
-
-    },
-})
-
-
-const upload = multer({ storage: storage })
-
-router.post(`/upload`, upload.array("images"), async (req, res) => {
-    imagesArr = [];
-
-    
-    try {
-        for (let i = 0; i < req .files?.length; i++) {
-
-            const options = {
-                use_filename: true,
-                unique_filename: false,
-                overwrite: false,
-            };
-
-            const img = await cloudinary.uploader.upload(req.files[i].path, options,
-                function (error, result) {
-                    imagesArr.push(result.secure_url);
-                    fs.unlinkSync(`uploads/${req.files[i].filename}`);
-                });
-        }
-
-        let imagesUploaded = new ImageUpload({
-            images: imagesArr,
-        });
-
-        imagesUploaded = await imagesUploaded.save();
-
-        return res.status(200).json(imagesArr);
-
-    } catch (error) {
-        console.log(error);
     }
-
-
 });
 
+// Multer upload instance
+const upload = multer({ storage: storage });
 
+// POST /upload endpoint for uploading images
+router.post('/upload', async (req, res) => {
+    try {
+        // Use multer to handle file uploads
+        await upload.array("images")(req, res, async (err) => {
+            if (err instanceof multer.MulterError) {
+                // Multer error occurred
+                console.error('Multer error:', err);
+                return res.status(400).json({ error: 'Multer error' });
+            } else if (err) {
+                // Other unknown error
+                console.error('Unknown error:', err);
+                return res.status(500).json({ error: 'Unknown error' });
+            }
+
+            const imagesArr = [];
+
+            // Upload each file to Cloudinary
+            for (let i = 0; i < req.files.length; i++) {
+                const options = {
+                    use_filename: true,
+                    unique_filename: true,
+                    overwrite: false,
+                };
+
+                try {
+                    const result = await cloudinary.uploader.upload(req.files[i].path, options);
+                    imagesArr.push(result.secure_url);
+
+                    // Remove uploaded file from local storage
+                    fs.unlinkSync(req.files[i].path);
+                } catch (uploadError) {
+                    console.error('Error uploading image to Cloudinary:', uploadError);
+                    return res.status(500).json({ error: 'Error uploading image to Cloudinary' });
+                }
+            }
+
+            // Save uploaded image URLs to your database
+            const imagesUploaded = new ImageUpload({
+                images: imagesArr,
+            });
+
+            try {
+                await imagesUploaded.save();
+                return res.status(200).json(imagesArr);
+            } catch (saveError) {
+                console.error('Error saving image URLs to database:', saveError);
+                return res.status(500).json({ error: 'Error saving image URLs to database' });
+            }
+        });
+    } catch (error) {
+        console.error('Error uploading images:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+});
 
 router.get('/', async (req, res) => {
 
@@ -329,25 +383,41 @@ router.post('/create' ,  async(req, res) => {
 });
 
 router.delete('/deleteImage', async (req, res) => {
-    const imgUrl = req.query.img;
+    try {
+        const imgUrl = req.query.img;
 
-    // console.log(imgUrl)
+   // console.log(imgUrl)
 
     const urlArr = imgUrl.split('/');
-    const image = urlArr[urlArr.length - 1];
-
+    const image =  urlArr[urlArr.length-1];
+  
     const imageName = image.split('.')[0];
 
-
-    const response = await cloudinary.uploader.destroy(imageName, (error, result) => {
-
+    const response = await cloudinary.uploader.destroy(imageName, (error,result)=>{
+       // console.log(error, res)
     })
 
-    if (response) {
+    if(response){
         res.status(200).send(response);
     }
-
+    } catch (error) {
+        console.error('Error deleting image:', error);
+        res.status(500).send({ error: 'Internal server error' });
+    }
 });
+
+// router.delete('/deleteImage', async (req, res) => {
+//     const imgUrl = req.query.img;
+//     const urlArr = imgUrl.split('/');
+//     const image = urlArr[urlArr.length - 1];
+//     const imageName = image.split('.')[0];
+//     const response = await cloudinary.uploader.destroy(imageName, (error, result) => {
+
+//     })
+//     if (response) {
+//         res.status(200).send(response);
+//     }
+// });
 
 router.delete('/:id', async(req, res) => {
     const product = await Product.findById(req.params.id);
@@ -398,6 +468,7 @@ router.put('/:id', async(req, res) => {
         countInStock: req.body.countInStock,
         rating: req.body.rating,
         isFeatured: req.body.isFeatured,
+        discount: req.body.discount,
         productRam: req.body.productRam,
         size: req.body.size,
         color: req.body.color,

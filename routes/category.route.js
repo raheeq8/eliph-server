@@ -151,7 +151,6 @@ router.post('/create', async (req, res) => {
         name: req.body.name,
         images: imagesArr,
         color: req.body.color,
-        shop: req.body.shop
     })
 
     if (!category) {
