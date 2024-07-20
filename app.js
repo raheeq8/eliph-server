@@ -6,10 +6,12 @@ const mongoose = require('mongoose');
 require('dotenv/config');
 const events = require('events');
 events.EventEmitter.defaultMaxListeners = 20;
+const path = require('path');
 // const authJwt = require('./helper/jwt.js');
-
+app.use(express.json());
 app.use(cors());
 app.options('*', cors());
+app.use('/receipts', express.static(path.join(__dirname, 'receipts')));
 
 // PORT
 const PORT = process.env.PORT || 8080
