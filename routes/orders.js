@@ -4,9 +4,7 @@ const { Shop } = require('../models/shop');
 const express = require('express');
 const mongoose = require('mongoose');
 const router = express.Router();
-const puppeteer = require('puppeteer');
 const path = require('path');
-const axios =  require("axios");
 const pdf = require('html-pdf');
 const fs = require('fs-extra');
 
