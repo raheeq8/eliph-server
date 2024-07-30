@@ -6,7 +6,7 @@ const router = express.Router();
 router.get(`/`, async (req, res) => {
 
     try {
-        const productSizeList = await ProductSize.find();
+        const productSizeList = await ProductSize.find(req.query);
 
         if (!productSizeList) {
             res.status(500).json({ success: false })
@@ -36,7 +36,8 @@ router.get('/:id', async (req, res) => {
 router.post('/create', async (req, res) => {
     
     let productsize = new ProductSize({
-        size: req.body.size
+        size: req.body.size,
+        shop: req.body.shop
     });
 
 

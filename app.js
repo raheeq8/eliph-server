@@ -32,6 +32,7 @@ const productWeightRoutes = require('./routes/productWeight.js');
 const productRAMSRoutes = require('./routes/productRAMS.js');
 const productSIZESRoutes = require('./routes/productSize.js');
 const productColorsRoutes = require('./routes/productColor.js');
+const additionalDetailsRoutes = require('./routes/additionalDetails.js');
 const userRoutes = require('./routes/user.js');
 const productReviews = require('./routes/productReviews.js');
 const cartSchema = require('./routes/cart.js');
@@ -43,6 +44,8 @@ const shopRoutes = require('./routes/shop.js');
 const verifyCodeRoute = require('./routes/verifyCode.js');
 const sellerRoutes = require('./routes/seller.js');
 const contactRoutes = require('./routes/contact.js');
+const searchDashboardRoute = require('./routes/searchDashboard.js');
+const imageRoutes = require('./routes/images.js');
 
 
 
@@ -56,6 +59,7 @@ app.use(`/api/productWeight`, productWeightRoutes);
 app.use(`/api/productRAMS`, productRAMSRoutes);
 app.use(`/api/productSIZE`, productSIZESRoutes);
 app.use(`/api/productCOLOR`, productColorsRoutes);
+app.use(`/api/additionalDetails`, additionalDetailsRoutes);
 app.use(`/api/productReviews`, productReviews);
 app.use(`/api/cart`, cartSchema);
 app.use(`/api/my-list`, myListSchema);
@@ -66,14 +70,11 @@ app.use(`/api/shop`, shopRoutes);
 app.use(`/api/verify-code`, verifyCodeRoute);
 app.use('/api/seller', sellerRoutes);
 app.use('/api/contact', contactRoutes);
+app.use('/api/searchdashboard', searchDashboardRoute);
+app.use('/api/images', imageRoutes);
 
 // Database connection
-mongoose.connect(process.env.MONGO_URI,
-//      {
-//     useNewUrlParser: true,
-//     useUnifiedTopology: true
-// }
-)
+mongoose.connect(process.env.MONGO_URI)
 .then(() => {
     console.log('Database connected successfully')
 })

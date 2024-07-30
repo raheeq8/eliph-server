@@ -4,7 +4,8 @@ const productColorSchema = mongoose.Schema({
     color:{
         type:String,
         default:null
-    }
+    },
+    shop: { type: mongoose.Schema.Types.ObjectId, ref: 'Shop', required: true },
 })
 
 productColorSchema.virtual('id').get(function () {

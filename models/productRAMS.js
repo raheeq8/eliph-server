@@ -4,7 +4,8 @@ const productRamsSchema = mongoose.Schema({
     productRam:{
         type:String,
         default:null
-    }
+    },
+    shop: { type: mongoose.Schema.Types.ObjectId, ref: 'Shop', required: true },
 })
 
 productRamsSchema.virtual('id').get(function () {

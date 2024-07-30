@@ -29,6 +29,7 @@ router.post('/add', async (req, res) => {
     if(item.length===0){
         let list = new MyList({
             productTitle: req.body.productTitle,
+            countInStock: req.body.countInStock,
             shop: req.body.shop,
             productSize: req.body.productSize,
             productWeight: req.body.productWeight,

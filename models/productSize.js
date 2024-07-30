@@ -4,7 +4,8 @@ const productSizeSchema = mongoose.Schema({
     size:{
         type:String,
         default:null
-    }
+    },
+    shop: { type: mongoose.Schema.Types.ObjectId, ref: 'Shop', required: true },
 })
 
 productSizeSchema.virtual('id').get(function () {

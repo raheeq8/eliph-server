@@ -168,22 +168,19 @@ router.post('/create', async (req, res) => {
 router.delete('/deleteImage', async (req, res) => {
     const imgUrl = req.query.img;
 
-   // console.log(imgUrl)
-
     const urlArr = imgUrl.split('/');
     const image =  urlArr[urlArr.length-1];
   
     const imageName = image.split('.')[0];
 
-    const response = await cloudinary.uploader.destroy(imageName, (error,result)=>{
-       // console.log(error, res)
-    })
-
+    const response = await cloudinary.uploader.destroy(imageName, { invalidate: true })
     if(response){
         res.status(200).send(response);
     }
       
 });
+
+  
 
 router.delete('/:id', async (req, res) => {
     const category = await Category.findById(req.params.id);

@@ -6,7 +6,7 @@ const router = express.Router();
 router.get(`/`, async (req, res) => {
 
     try {
-        const productWeightList = await ProductWeight.find();
+        const productWeightList = await ProductWeight.find(req.query);
 
         if (!productWeightList) {
             res.status(500).json({ success: false })
@@ -36,7 +36,8 @@ router.get('/:id', async (req, res) => {
 router.post('/create', async (req, res) => {
     
     let productWeight = new ProductWeight({
-        productWeight: req.body.productWeight
+        productWeight: req.body.productWeight,
+        shop: req.body.shop
     });
 
 

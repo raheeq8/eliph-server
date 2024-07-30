@@ -6,7 +6,7 @@ const router = express.Router();
 router.get(`/`, async (req, res) => {
 
     try {
-        const productREAMSList = await ProductRams.find();
+        const productREAMSList = await ProductRams.find(req.query);
 
         if (!productREAMSList) {
             res.status(500).json({ success: false })
@@ -36,7 +36,8 @@ router.get('/:id', async (req, res) => {
 router.post('/create', async (req, res) => {
     
     let productRAMS = new ProductRams({
-        productRam: req.body.productRam
+        productRam: req.body.productRam,
+        shop: req.body.shop
     });
 
 

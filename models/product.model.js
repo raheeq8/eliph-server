@@ -94,6 +94,12 @@ const productSchema = mongoose.Schema({
             default: null,
         }
     ],
+    detail: [
+        {
+            type: String,
+            default: null,
+        }
+    ],
     productWeight: [
         {
             type: String,

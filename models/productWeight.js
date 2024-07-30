@@ -4,7 +4,8 @@ const productWeightSchema = mongoose.Schema({
     productWeight:{
         type:String,
         default:null
-    }
+    },
+    shop: { type: mongoose.Schema.Types.ObjectId, ref: 'Shop', required: true },
 })
 
 productWeightSchema.virtual('id').get(function () {

@@ -5,6 +5,10 @@ const myListSchema = mongoose.Schema({
         type:String,
         required:true
     },
+    countInStock:{
+        type:String,
+        required:true
+    },
     shop:{
         type: String
     },

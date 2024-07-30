@@ -1,4 +1,4 @@
-const {ProductColor}  = require("../models/productColor") ;
+const {AdditionalDetails}  = require("../models/additionalDetails.js") ;
 const express = require('express');
 const router = express.Router();
 
@@ -6,13 +6,13 @@ const router = express.Router();
 router.get(`/`, async (req, res) => {
 
     try {
-        const productColorList = await ProductColor.find(req.query);
+        const additionalDetailsList = await AdditionalDetails.find(req.query);
 
-        if (!productColorList) {
+        if (!additionalDetailsList) {
            return res.status(500).json({ success: false })
         }
 
-        return res.status(200).json(productColorList);
+        return res.status(200).json(additionalDetailsList);
 
     } catch (error) {
        return res.status(500).json({ success: false })
@@ -24,7 +24,7 @@ router.get(`/`, async (req, res) => {
 
 router.get('/:id', async (req, res) => {
 
-    const item = await ProductColor.findById(req.params.id);
+    const item = await AdditionalDetails.findById(req.params.id);
 
     if (!item) {
        return res.status(500).json({ message: 'The item with the given ID was not found.' })
@@ -35,14 +35,14 @@ router.get('/:id', async (req, res) => {
 
 router.post('/create', async (req, res) => {
     
-    let productColor = new ProductColor({
-        color: req.body.color,
+    let additionalDetails = new AdditionalDetails({
+        detail: req.body.detail,
         shop: req.body.shop
     });
 
 
 
-    if (!productColor) {
+    if (!additionalDetails) {
         return res.status(500).json({
             error: err,
             success: false
@@ -50,15 +50,15 @@ router.post('/create', async (req, res) => {
     }
 
 
-    productColor = await productColor.save();
+    additionalDetails = await additionalDetails.save();
 
-    return res.status(201).json(productColor);
+    return res.status(201).json(additionalDetails);
 
 });
 
 
 router.delete('/:id', async (req, res) => {
-    const deletedItem = await ProductColor.findByIdAndDelete(req.params.id);
+    const deletedItem = await AdditionalDetails.findByIdAndDelete(req.params.id);
 
     if (!deletedItem) {
         return res.status(404).json({
@@ -76,10 +76,10 @@ router.delete('/:id', async (req, res) => {
 
 router.put('/:id', async (req, res) => {
 
-    const item = await ProductColor.findByIdAndUpdate(
+    const item = await AdditionalDetails.findByIdAndUpdate(
         req.params.id,
         {
-            color: req.body.color,
+            detail: req.body.detail,
         },
         { new: true }
     )

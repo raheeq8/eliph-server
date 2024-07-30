@@ -334,12 +334,7 @@ router.post('/create' ,  async(req, res) => {
         if(!category){
             return res.status(400).send("Invalid Category!")
         }
-    
-        // const shop = await Shop.findOne({ owner: req.user._id });
-    
-        // if (!shop) {
-        //     return res.status(404).json({ error: true, msg: "Shop not found" });
-        // }
+
     
         let product = new Product({
             staticId: req.body.staticId,
@@ -363,6 +358,7 @@ router.post('/create' ,  async(req, res) => {
             productRam: req.body.productRam,
             size: req.body.size,
             color: req.body.color,
+            detail: req.body.detail,
             productWeight: req.body.productWeight,
             shop: req.body.shop
         });
@@ -472,6 +468,7 @@ router.put('/:id', async(req, res) => {
         productRam: req.body.productRam,
         size: req.body.size,
         color: req.body.color,
+        detail: req.body.detail,
         productWeight: req.body.productWeight,
     },{ new: true });
     if(!product){
