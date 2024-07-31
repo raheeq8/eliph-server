@@ -45,7 +45,6 @@ const verifyCodeRoute = require('./routes/verifyCode.js');
 const sellerRoutes = require('./routes/seller.js');
 const contactRoutes = require('./routes/contact.js');
 const searchDashboardRoute = require('./routes/searchDashboard.js');
-const imageRoutes = require('./routes/images.js');
 
 
 
@@ -71,7 +70,6 @@ app.use(`/api/verify-code`, verifyCodeRoute);
 app.use('/api/seller', sellerRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/searchdashboard', searchDashboardRoute);
-app.use('/api/images', imageRoutes);
 
 // Database connection
 mongoose.connect(process.env.MONGO_URI)
