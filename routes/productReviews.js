@@ -17,27 +17,31 @@ router.get(`/`, async (req, res) => {
 
 
         if (!reviews) {
-            res.status(500).json({ success: false })
+            return res.status(500).json({ success: false })
         }
 
         return res.status(200).json(reviews);
 
     } catch (error) {
-        res.status(500).json({ success: false })
+        return res.status(500).json({ success: false })
     }
 
 
 });
 
 router.get(`/get/count`, async (req, res) =>{
-    const productsReviews = await ProductReviews.countDocuments()
-
-    if(!productsReviews) {
-        res.status(500).json({success: false})
-    } 
-    res.send({
-        productsReviews: productsReviews
-    });
+    try {
+        const productsReviews = await ProductReviews.countDocuments()
+    
+        if(!productsReviews) {
+            return res.status(500).json({success: false})
+        } 
+        return res.send({
+            productsReviews: productsReviews
+        });
+    } catch (error) {
+        console.log(`reviews_get/count`, error)
+    }
 })
 
 
@@ -47,7 +51,7 @@ router.get('/:id', async (req, res) => {
     const review = await ProductReviews.findById(req.params.id);
 
     if (!review) {
-        res.status(500).json({ message: 'The review with the given ID was not found.' })
+        return res.status(500).json({ message: 'The review with the given ID was not found.' })
     }
     return res.status(200).send(review);
 })
@@ -70,7 +74,7 @@ router.post('/add', async (req, res) => {
 
 
     if (!review) {
-        res.status(500).json({
+        return res.status(500).json({
             error: err,
             success: false
         })

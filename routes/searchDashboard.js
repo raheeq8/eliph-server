@@ -10,9 +10,9 @@ router.get('/', async (req, res) => {
       name: { $regex: query, $options: 'i' },
       shop: shopId
     });
-    res.json(products);
+    return res.json(products);
   } catch (error) {
-    res.status(500).send(error.message);
+    return res.status(500).send(error.message);
   }
 });
 

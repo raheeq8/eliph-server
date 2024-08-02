@@ -140,6 +140,7 @@ router.get('/', async (req, res) => {
     const perPage = parseInt(req.query.perPage);
     const totalPosts = await Product.countDocuments();
     const totalPages = Math.ceil(totalPosts / perPage);
+    const subCatName = req.query.subCatName;
 
     if (page > totalPages) {
         return res.status(404).json({ message: "Page Not Found" })
@@ -186,13 +187,13 @@ router.get('/', async (req, res) => {
         });
 
 
-    } 
+    }
 
     else {
         productList = await Product.find(req.query).populate("category subCat shop");
 
         if (!productList) {
-            res.status(500).json({ success: false })
+            return res.status(500).json({ success: false })
         }
 
         return res.status(200).json({
@@ -205,10 +206,11 @@ router.get('/', async (req, res) => {
 
 });
 
+
 router.get(`/featured`, async (req, res) => {
     const productList = await Product.find({ isFeatured: true });
     if (!productList) {
-        res.status(500).json({ success: false })
+        return res.status(500).json({ success: false })
     }
 
     return res.status(200).json(productList);
@@ -219,7 +221,7 @@ router.get(`/recentlyViewd`, async (req, res) => {
     productList = await RecentlyViewd.find(req.query).populate("category subCat shop");
 
     if (!productList) {
-        res.status(500).json({ success: false })
+        return res.status(500).json({ success: false })
     }
 
     return res.status(200).json(productList);
@@ -228,14 +230,14 @@ router.get(`/recentlyViewd`, async (req, res) => {
 router.post(`/recentlyViewd`, async (req, res) => {
 
 
-    let findProduct = await RecentlyViewd.find({prodId:req.body.id});
-  
+    let findProduct = await RecentlyViewd.find({ prodId: req.body.id });
+
     var product;
 
-    if(findProduct.length===0){
+    if (findProduct.length === 0) {
         product = new RecentlyViewd({
             staticId: req.body.staticId,
-            prodId:req.body.id,
+            prodId: req.body.id,
             name: req.body.name,
             description: req.body.description,
             images: req.body.images,
@@ -261,81 +263,85 @@ router.post(`/recentlyViewd`, async (req, res) => {
         product = await product.save();
 
         if (!product) {
-            res.status(500).json({
+            return res.status(500).json({
                 error: err,
                 success: false
             })
         }
-    
-        res.status(201).json(product);
-    }
- 
 
-   
+        return res.status(201).json(product);
+    }
+
+
+
 
 
 });
 
-router.get('/:id', async(req, res) => {
+router.get('/:id', async (req, res) => {
 
     productEditId = req.params.id
 
     const product = await Product.findById(req.params.id);
 
-    if(!product){
-       return  res.status(500).json({ message:"The product with the given id not found" , success: false })
+    if (!product) {
+        return res.status(500).json({ message: "The product with the given id not found", success: false })
     }
     return res.status(200).send(product)
 });
 router.get('/staticId/:staticId', async (req, res) => {
     try {
-      const product = await Product.findOne({ staticId: req.params.staticId });
-      if (!product) return res.status(404).json({ message: 'Product not found' });
-      res.json(product);
+        const product = await Product.findOne({ staticId: req.params.staticId });
+        if (!product) return res.status(404).json({ message: 'Product not found' });
+        return res.json(product);
     } catch (error) {
-      res.status(500).json({ message: error.message });
+        return res.status(500).json({ message: error.message });
     }
-  });
+});
 // Get products by shopId
 router.get('/shop/:shopId', async (req, res) => {
     try {
         const products = await Product.find({ shop: req.params.shop });
-        res.json(products);
+        return res.json(products);
     } catch (error) {
-        res.status(500).json({ message: 'Server error' });
+        return res.status(500).json({ message: 'Server error' });
     }
 });
-router.get(`/get/count`, async (req, res) =>{
-    const productsCount = await Product.countDocuments()
+router.get(`/get/count`, async (req, res) => {
+    try {
+        const productsCount = await Product.countDocuments()
 
-    if(!productsCount) {
-        res.status(500).json({success: false})
-    } 
-    res.send({
-        productsCount: productsCount
-    });
+        if (!productsCount) {
+            return res.status(404).json({ success: false })
+        }
+        return res.send({
+            productsCount: productsCount
+        });
+    } catch (error) {
+        console.log(error)
+    }
 })
 
-router.post('/create' ,  async(req, res) => {
-   
+router.post('/create', async (req, res) => {
+
     try {
         const category = await Category.findById(req.body.category);
         const images_Array = [];
         const uploadedImages = await ImageUpload.find();
-    
+
         const images_Arr = uploadedImages?.map((item) => {
             item.images?.map((image) => {
                 images_Array.push(image);
                 console.log(image);
             })
-    
-    
+
+
         })
-        if(!category){
+        if (!category) {
             return res.status(400).send("Invalid Category!")
         }
 
-    
+
         let product = new Product({
             staticId: req.body.staticId,
             name: req.body.name,
@@ -363,18 +369,18 @@ router.post('/create' ,  async(req, res) => {
             shop: req.body.shop
         });
         product = await product.save();
-    
-        if(!product){
+
+        if (!product) {
             return res.status(500).json({
                 error: "Cannot create product",
                 success: false
             })
         };
         imagesArr = [];
-        res.status(201).json(product)
+        return res.status(201).json(product)
     } catch (error) {
         console.log(error);
-        res.status(500).json({ error: true, msg: "Something went wrong" });
+        return res.status(500).json({ error: true, msg: "Something went wrong" });
     }
 });
 
@@ -382,23 +388,23 @@ router.delete('/deleteImage', async (req, res) => {
     try {
         const imgUrl = req.query.img;
 
-   // console.log(imgUrl)
+        // console.log(imgUrl)
 
-    const urlArr = imgUrl.split('/');
-    const image =  urlArr[urlArr.length-1];
-  
-    const imageName = image.split('.')[0];
+        const urlArr = imgUrl.split('/');
+        const image = urlArr[urlArr.length - 1];
 
-    const response = await cloudinary.uploader.destroy(imageName, (error,result)=>{
-       // console.log(error, res)
-    })
+        const imageName = image.split('.')[0];
 
-    if(response){
-        res.status(200).send(response);
-    }
+        const response = await cloudinary.uploader.destroy(imageName, (error, result) => {
+            // console.log(error, res)
+        })
+
+        if (response) {
+            return res.status(200).send(response);
+        }
     } catch (error) {
         console.error('Error deleting image:', error);
-        res.status(500).send({ error: 'Internal server error' });
+        return res.status(500).send({ error: 'Internal server error' });
     }
 });
 
@@ -415,7 +421,7 @@ router.delete('/deleteImage', async (req, res) => {
 //     }
 // });
 
-router.delete('/:id', async(req, res) => {
+router.delete('/:id', async (req, res) => {
     const product = await Product.findById(req.params.id);
     const images = product.images;
 
@@ -436,8 +442,8 @@ router.delete('/:id', async(req, res) => {
     }
 
     const deleteProduct = await Product.findByIdAndDelete(req.params.id);
-    if(!deleteProduct){
-        res.status(404).json({ message:"The product with the given id not found" , success: false })
+    if (!deleteProduct) {
+        return res.status(404).json({ message: "The product with the given id not found", success: false })
     }
     return res.status(200).json({
         message: "product deleted",
@@ -445,10 +451,10 @@ router.delete('/:id', async(req, res) => {
     })
 });
 
-router.put('/:id', async(req, res) => {
-    
+router.put('/:id', async (req, res) => {
 
-    const product = await Product.findByIdAndUpdate(req.params.id,{
+
+    const product = await Product.findByIdAndUpdate(req.params.id, {
         name: req.body.name,
         description: req.body.description,
         images: req.body.images,
@@ -470,9 +476,9 @@ router.put('/:id', async(req, res) => {
         color: req.body.color,
         detail: req.body.detail,
         productWeight: req.body.productWeight,
-    },{ new: true });
-    if(!product){
-        res.status(404).json({ message:"The product with the given cannot be updated" , success: false })
+    }, { new: true });
+    if (!product) {
+        return res.status(404).json({ message: "The product with the given cannot be updated", success: false })
     }
     imagesArr = [];
     return res.status(200).json({

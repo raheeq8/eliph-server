@@ -213,8 +213,8 @@ router.post(`/signup`, async (req, res) => {
         }
         let shop;
         // Create a shop for the user
-        if(result.isAdmin === true){
-             shop = await Shop.create({
+        if (result.isAdmin === true) {
+            shop = await Shop.create({
                 name: `${name}'s Shop`,
                 owner: result._id
             });
@@ -282,55 +282,60 @@ router.post(`/signin`, async (req, res) => {
         })
 
     } catch (error) {
-        res.status(500).json({ error: true, msg: "something went wrong" });
+        return res.status(500).json({ error: true, msg: "something went wrong" });
     }
 
 })
 
 router.put(`/changePassword/:id`, async (req, res) => {
 
-    const { name, phone, email, password, newPass, images } = req.body;
+    try {
+        const { name, phone, email, password, newPass, images } = req.body;
 
-    // console.log(req.body)
+        // console.log(req.body)
 
-    const existingUser = await User.findOne({ email: email });
-    if (!existingUser) {
-        res.status(404).json({ error: true, msg: "User not found!" })
-    }
-
-    const matchPassword = await bcrypt.compare(password, existingUser.password);
-
-    if (!matchPassword) {
-        return res.json({ error: true, msg: "current password wrong" })
-    } else {
-
-        let newPassword
-
-        if (newPass) {
-            newPassword = bcrypt.hashSync(newPass, 10)
-        } else {
-            newPassword = existingUser.passwordHash;
+        const existingUser = await User.findOne({ email: email });
+        if (!existingUser) {
+            return res.status(404).json({ error: true, msg: "User not found!" })
         }
 
+        const matchPassword = await bcrypt.compare(password, existingUser.password);
 
-        const user = await User.findByIdAndUpdate(
-            req.params.id,
-            {
-                name: name,
-                phone: phone,
-                email: email,
-                password: newPassword,
-                images: images,
-            },
-            { new: true }
-        )
+        if (!matchPassword) {
+            return res.json({ error: true, msg: "current password wrong" })
+        } else {
 
-        if (!user)
-            return res.status(400).send('the user cannot be Updated!')
+            let newPassword
 
-        res.send(user);
+            if (newPass) {
+                newPassword = bcrypt.hashSync(newPass, 10)
+            } else {
+                newPassword = existingUser.passwordHash;
+            }
+
+
+            const user = await User.findByIdAndUpdate(
+                req.params.id,
+                {
+                    name: name,
+                    phone: phone,
+                    email: email,
+                    password: newPassword,
+                    images: images,
+                },
+                { new: true }
+            )
+
+            if (!user)
+                return res.status(400).send('the user cannot be Updated!')
+
+            return res.send(user);
+        }
+
+    } catch (error) {
+        console.log('user_changePassword', error)
+        return res.status(500).json({ message: 'Internal server error' })
     }
-
 
 
 })
@@ -338,21 +343,31 @@ router.put(`/changePassword/:id`, async (req, res) => {
 
 
 router.get(`/`, async (req, res) => {
-    const userList = await User.find();
+    try {
+        const userList = await User.find();
 
-    if (!userList) {
-        res.status(500).json({ success: false })
+        if (!userList) {
+            return res.status(500).json({ success: false })
+        }
+        return res.send(userList);
+    } catch (error) {
+        console.log('Error user_get', error)
+        return res.status(500).json({ message: 'Internal server error' })
     }
-    res.send(userList);
 })
 
 router.get('/:id', async (req, res) => {
-    const user = await User.findById(req.params.id);
+    try {
+        const user = await User.findById(req.params.id);
 
-    if (!user) {
-        res.status(500).json({ message: 'The user with the given ID was not found.' })
+        if (!user) {
+            return res.status(404).json({ message: 'The user with the given ID was not found.' })
+        }
+        return res.status(200).send(user);
+    } catch (error) {
+        console.log('user_getbyid', error)
+        return res.status(500).json({ message: 'Internal server error.' })
     }
-    res.status(200).send(user);
 })
 
 
@@ -372,14 +387,19 @@ router.delete('/:id', (req, res) => {
 
 
 router.get(`/get/count`, async (req, res) => {
-    const userCount = await User.countDocuments()
+    try {
+        const userCount = await User.countDocuments()
 
-    if (!userCount) {
-        res.status(500).json({ success: false })
+        if (!userCount) {
+            return res.status(500).json({ success: false })
+        }
+        return res.send({
+            userCount: userCount
+        });
+    } catch (error) {
+        console.log("Error while /get/count", error)
+        return res.status(500).json({ message: 'Internal server error' })
     }
-    res.send({
-        userCount: userCount
-    });
 })
 
 
@@ -387,31 +407,37 @@ router.get(`/get/count`, async (req, res) => {
 router.put('/:id', async (req, res) => {
 
     const { name, phone, email } = req.body;
+    try {
 
-    const userExist = await User.findById(req.params.id);
+        const userExist = await User.findById(req.params.id);
 
-    if (req.body.password) {
-        newPassword = bcrypt.hashSync(req.body.password, 10)
-    } else {
-        newPassword = userExist.passwordHash;
+        if (req.body.password) {
+            newPassword = bcrypt.hashSync(req.body.password, 10)
+        } else {
+            newPassword = userExist.passwordHash;
+        }
+
+        const user = await User.findByIdAndUpdate(
+            req.params.id,
+            {
+                name: name,
+                phone: phone,
+                email: email,
+                password: newPassword,
+                images: imagesArr,
+            },
+            { new: true }
+        )
+
+        if (!user)
+            return res.status(400).send('the user cannot be Updated!')
+
+        return res.send(user);
+
+    } catch (error) {
+        console.log('user_put', error)
+        return res.status(500).json({ message: 'Internal server error' })
     }
-
-    const user = await User.findByIdAndUpdate(
-        req.params.id,
-        {
-            name: name,
-            phone: phone,
-            email: email,
-            password: newPassword,
-            images: imagesArr,
-        },
-        { new: true }
-    )
-
-    if (!user)
-        return res.status(400).send('the user cannot be Updated!')
-
-    res.send(user);
 })
 
 
@@ -450,21 +476,24 @@ router.put('/:id', async (req, res) => {
 
 
 router.delete('/deleteImage', async (req, res) => {
-    const imgUrl = req.query.img;
-
-    // console.log(imgUrl)
-
-    const urlArr = imgUrl.split('/');
-    const image = urlArr[urlArr.length - 1];
-
-    const imageName = image.split('.')[0];
-
-    const response = await cloudinary.uploader.destroy(imageName, (error, result) => {
-        // console.log(error, res)
-    })
-
-    if (response) {
-        res.status(200).send(response);
+    try {
+        const imgUrl = req.query.img;
+    
+        const urlArr = imgUrl.split('/');
+        const image = urlArr[urlArr.length - 1];
+    
+        const imageName = image.split('.')[0];
+    
+        const response = await cloudinary.uploader.destroy(imageName, (error, result) => {
+            // console.log(error, res)
+        })
+    
+        if (response) {
+           return res.status(200).send(response);
+        }
+    } catch (error) {
+        console.log('user_deleteImage', error)
+        return res.status(500).json({ message: "Internal server error"})
     }
 
 });

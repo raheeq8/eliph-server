@@ -9,13 +9,13 @@ router.get(`/`, async (req, res) => {
         const productREAMSList = await ProductRams.find(req.query);
 
         if (!productREAMSList) {
-            res.status(500).json({ success: false })
+            return res.status(500).json({ success: false })
         }
 
         return res.status(200).json(productREAMSList);
 
     } catch (error) {
-        res.status(500).json({ success: false })
+       return res.status(500).json({ success: false })
     }
 
 
@@ -27,7 +27,7 @@ router.get('/:id', async (req, res) => {
     const item = await ProductRams.findById(req.params.id);
 
     if (!item) {
-        res.status(500).json({ message: 'The item with the given ID was not found.' })
+        return res.status(500).json({ message: 'The item with the given ID was not found.' })
     }
     return res.status(200).send(item);
 })
@@ -35,24 +35,29 @@ router.get('/:id', async (req, res) => {
 
 router.post('/create', async (req, res) => {
     
-    let productRAMS = new ProductRams({
-        productRam: req.body.productRam,
-        shop: req.body.shop
-    });
-
-
-
-    if (!productRAMS) {
-        res.status(500).json({
-            error: err,
-            success: false
-        })
+    try {
+        let productRAMS = new ProductRams({
+            productRam: req.body.productRam,
+            shop: req.body.shop
+        });
+    
+    
+    
+        if (!productRAMS) {
+            return res.status(500).json({
+                error: err,
+                success: false
+            })
+        }
+    
+    
+        productRAMS = await productRAMS.save();
+    
+        return res.status(201).json(productRAMS);
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json({ message: "Internal server error"})
     }
-
-
-    productRAMS = await productRAMS.save();
-
-    res.status(201).json(productRAMS);
 
 });
 
@@ -76,23 +81,28 @@ router.delete('/:id', async (req, res) => {
 
 router.put('/:id', async (req, res) => {
 
-    const item = await ProductRams.findByIdAndUpdate(
-        req.params.id,
-        {
-            productRam: req.body.productRam,
-        },
-        { new: true }
-    )
-
-    if (!item) {
-        return res.status(500).json({
-            message: 'item cannot be updated!',
-            success: false
-        })
+    try {
+        const item = await ProductRams.findByIdAndUpdate(
+            req.params.id,
+            {
+                productRam: req.body.productRam,
+            },
+            { new: true }
+        )
+    
+        if (!item) {
+            return res.status(500).json({
+                message: 'item cannot be updated!',
+                success: false
+            })
+        }
+    
+    
+        return res.send(item);
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json({ message: "Internal server error"})
     }
-
-
-    res.send(item);
 
 })
 

@@ -76,23 +76,28 @@ router.delete('/:id', async (req, res) => {
 
 router.put('/:id', async (req, res) => {
 
-    const item = await ProductColor.findByIdAndUpdate(
-        req.params.id,
-        {
-            color: req.body.color,
-        },
-        { new: true }
-    )
-
-    if (!item) {
-        return res.status(500).json({
-            message: 'item cannot be updated!',
-            success: false
-        })
+    try {
+        const item = await ProductColor.findByIdAndUpdate(
+            req.params.id,
+            {
+                color: req.body.color,
+            },
+            { new: true }
+        )
+    
+        if (!item) {
+            return res.status(500).json({
+                message: 'item cannot be updated!',
+                success: false
+            })
+        }
+    
+    
+       return res.send(item);
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json({ message: "Internal server error"})
     }
-
-
-   return res.send(item);
 
 })
 

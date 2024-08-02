@@ -23,28 +23,33 @@ router.get('/', async (req, res) => {
     }
         // const subCatList = await SubCat.find().populate("category").skip((page - 1) * perPage).limit(perPage).exec();
         if (!subCtegoryList) {
-            res.status(404).json({ message: "The sub category with the given id not found", success: false })
+            return res.status(404).json({ message: "The sub category with the given id not found", success: false })
         }
-        res.status(200).json({
+        return res.status(200).json({
             "subCatList": subCtegoryList,
             "totalPages": totalPages,
             "page": page
         })
     } catch (error) {
-        res.status(500).json({ message: "Internal server error"})
         console.log(error)
+       return res.status(500).json({ message: "Internal server error"})
     }
 })
 
 router.get(`/get/count`, async (req, res) =>{
-    const subCatCount = await SubCat.countDocuments()
-
-    if(!subCatCount) {
-        res.status(500).json({success: false})
-    } 
-    res.send({
-        subCatCount: subCatCount
-    });
+    try {
+        const subCatCount = await SubCat.countDocuments()
+    
+        if(!subCatCount) {
+            return res.status(500).json({success: false})
+        } 
+        return res.send({
+            subCatCount: subCatCount
+        });
+    } catch (error) {
+        console.log('subCaat_get/count', error)
+        return res.status(500).json({ message: "Internal server error"})
+    }
 })
 
 router.get('/:id', async (req, res) => {
@@ -59,43 +64,58 @@ router.get('/:id', async (req, res) => {
 });
 
 router.post('/create', async (req, res) => {
-    let subCat = new SubCat({
-        category: req.body.category,
-        subCat: req.body.subCat,
-        shop: req.body.shop
-    })
-
-    if (!subCat) {
-        return res.status(500).json({
-            error: "Cannot create sub category",
-            success: false
+    try {
+        let subCat = new SubCat({
+            category: req.body.category,
+            subCat: req.body.subCat,
+            shop: req.body.shop
         })
-    };
-
-    subCat = await subCat.save();
-    res.status(201).json(subCat)
+    
+        if (!subCat) {
+            return res.status(500).json({
+                error: "Cannot create sub category",
+                success: false
+            })
+        };
+    
+        subCat = await subCat.save();
+        return res.status(201).json(subCat)
+    } catch (error) {
+        console.log('subCat_create', error)
+        return res.status(500).json({ message: "Internal server error"})
+    }
 });
 
 router.delete('/:id', async (req, res) => {
-    const deletedSubCat = await SubCat.findByIdAndDelete(req.params.id);
-    if (!deletedSubCat) {
-        res.status(404).json({ message: "The sub category with the given id not found", success: false })
+    try {
+        const deletedSubCat = await SubCat.findByIdAndDelete(req.params.id);
+        if (!deletedSubCat) {
+            return res.status(404).json({ message: "The sub category with the given id not found", success: false })
+        }
+        return res.status(200).json({
+            message: "Sub Category deleted",
+            success: true
+        })
+    } catch (error) {
+        console.log('subCaat_delete', error)
+        return res.status(500).json({ message: "Internal server error"})
     }
-    return res.status(200).json({
-        message: "Sub Category deleted",
-        success: true
-    })
 });
 
 router.put('/:id', async (req, res) => {
-    const subCat = await SubCat.findByIdAndUpdate(req.params.id, {
-        category: req.body.category,
-        subCat: req.body.subCat,
-    }, { new: true });
-    if (!subCat) {
-        res.status(404).json({ message: "The sub category with the given cannot be updated", success: false })
+    try {
+        const subCat = await SubCat.findByIdAndUpdate(req.params.id, {
+            category: req.body.category,
+            subCat: req.body.subCat,
+        }, { new: true });
+        if (!subCat) {
+            return res.status(404).json({ message: "The sub category with the given cannot be updated", success: false })
+        }
+        return res.send(subCat)
+    } catch (error) {
+        console.log('subCat_put', error)
+        return res.status(500).json({ message: "Internal server error"})
     }
-    res.send(subCat)
 });
 
 

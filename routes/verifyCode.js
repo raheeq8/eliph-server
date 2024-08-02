@@ -22,6 +22,7 @@ router.post('/verify', async (req, res) => {
         }
     } catch (error) {
         console.log(`Error while verify user ${error}`)
+        return res.status(500).json({ message: "Internal server error "})
     }
 })
 

@@ -9,13 +9,13 @@ router.get(`/`, async (req, res) => {
         const productSizeList = await ProductSize.find(req.query);
 
         if (!productSizeList) {
-            res.status(500).json({ success: false })
+           return res.status(500).json({ success: false })
         }
 
         return res.status(200).json(productSizeList);
 
     } catch (error) {
-        res.status(500).json({ success: false })
+        return res.status(500).json({ success: false })
     }
 
 
@@ -27,7 +27,7 @@ router.get('/:id', async (req, res) => {
     const item = await ProductSize.findById(req.params.id);
 
     if (!item) {
-        res.status(500).json({ message: 'The item with the given ID was not found.' })
+        return res.status(500).json({ message: 'The item with the given ID was not found.' })
     }
     return res.status(200).send(item);
 })
@@ -43,7 +43,7 @@ router.post('/create', async (req, res) => {
 
 
     if (!productsize) {
-        res.status(500).json({
+        return res.status(500).json({
             error: err,
             success: false
         })
@@ -52,7 +52,7 @@ router.post('/create', async (req, res) => {
 
     productsize = await productsize.save();
 
-    res.status(201).json(productsize);
+    return res.status(201).json(productsize);
 
 });
 
@@ -61,13 +61,13 @@ router.delete('/:id', async (req, res) => {
     const deletedItem = await ProductSize.findByIdAndDelete(req.params.id);
 
     if (!deletedItem) {
-        res.status(404).json({
+        return res.status(404).json({
             message: 'Item not found!',
             success: false
         })
     }
 
-    res.status(200).json({
+    return res.status(200).json({
         success: true,
         message: 'Item Deleted!'
     })
@@ -76,23 +76,28 @@ router.delete('/:id', async (req, res) => {
 
 router.put('/:id', async (req, res) => {
 
-    const item = await ProductSize.findByIdAndUpdate(
-        req.params.id,
-        {
-            size: req.body.size,
-        },
-        { new: true }
-    )
-
-    if (!item) {
-        return res.status(500).json({
-            message: 'item cannot be updated!',
-            success: false
-        })
+    try {
+        const item = await ProductSize.findByIdAndUpdate(
+            req.params.id,
+            {
+                size: req.body.size,
+            },
+            { new: true }
+        )
+    
+        if (!item) {
+            return res.status(500).json({
+                message: 'item cannot be updated!',
+                success: false
+            })
+        }
+    
+    
+        return res.send(item);
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json({ message: "Internal server error"})
     }
-
-
-    res.send(item);
 
 })
 

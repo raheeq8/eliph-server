@@ -19,9 +19,9 @@ router.get('/', async (req, res) => {
             ]
         });
 
-        res.json(items);
+        return res.json(items);
     } catch (err) {
-        res.status(500).json({ msg: 'Server error' });
+        return res.status(500).json({ msg: 'Server error' });
     }
 });
 
