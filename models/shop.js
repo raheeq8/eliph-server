@@ -14,7 +14,11 @@ const shopSchema = mongoose.Schema({
     followersCount: {
         type: Number,
         default: 0
-    }
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now
+    },
 });
 
 exports.Shop = mongoose.model('Shop', shopSchema);
