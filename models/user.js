@@ -43,7 +43,14 @@ const userSchema = mongoose.Schema({
     isAdmin: {
         type: Boolean,
         default: false,
-    }
+    },
+    followedShops: [{
+        type: String,
+    }],
+    // followedShops: [{
+    //     type: mongoose.Schema.Types.ObjectId,
+    //     ref: 'Shop'
+    // }]
 })
 
 userSchema.virtual('id').get(function () {

@@ -77,13 +77,13 @@ router.get(`/`, async (req, res) => {
 
 
         if (!bannerImagesList) {
-            res.status(500).json({ success: false })
+            return res.status(500).json({ success: false })
         }
 
         return res.status(200).json(bannerImagesList);
 
     } catch (error) {
-        res.status(500).json({ success: false })
+        return res.status(500).json({ success: false })
     }
 
 

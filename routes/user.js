@@ -344,7 +344,7 @@ router.put(`/changePassword/:id`, async (req, res) => {
 
 router.get(`/`, async (req, res) => {
     try {
-        const userList = await User.find();
+        const userList = await User.find().populate('followedShops');
 
         if (!userList) {
             return res.status(500).json({ success: false })
@@ -358,7 +358,7 @@ router.get(`/`, async (req, res) => {
 
 router.get('/:id', async (req, res) => {
     try {
-        const user = await User.findById(req.params.id);
+        const user = await User.findById(req.params.id).populate('followedShops');
 
         if (!user) {
             return res.status(404).json({ message: 'The user with the given ID was not found.' })
@@ -498,5 +498,71 @@ router.delete('/deleteImage', async (req, res) => {
 
 });
 
+router.post('/follow/:shopId', async (req, res) => {
+    const userId = req.body.userId;
+    const { shopId } = req.params;
+
+    try {
+        const user = await User.findByIdAndUpdate(userId, {
+            $addToSet: { followedShops: shopId }
+        }, { new: true }); 
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Increment followers count for the shop
+        await Shop.findByIdAndUpdate(shopId, {
+            $inc: { followersCount: 1 }
+        });
+
+        res.status(200).json({ message: 'Shop followed successfully', user });
+    } catch (error) {
+        console.error('Error following shop:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
+router.post('/unfollow/:shopId', async (req, res) => {
+    const userId = req.body.userId; // Extract userId from request body
+    const { shopId } = req.params;
+
+    try {
+        const user = await User.findByIdAndUpdate(userId, {
+            $pull: { followedShops: shopId }
+        }, { new: true }); // Return the updated document
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Decrement followers count for the shop
+        await Shop.findByIdAndUpdate(shopId, {
+            $inc: { followersCount: -1 }
+        });
+
+        res.status(200).json({ message: 'Shop unfollowed successfully', user });
+    } catch (error) {
+        console.error('Error unfollowing shop:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
+router.get('/followed-shops', async (req, res) => {
+    try {
+      const user = await User.find(req.query).populate('followedShops');
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+  
+      return res.json(user.followedShops); // Assuming followedShops is an array of shop objects
+    } catch (error) {
+      console.error('Error fetching followed shops:', error);
+      res.status(500).json({ message: 'Internal Server Error' });
+    }
+  });
+  
 
 module.exports = router;

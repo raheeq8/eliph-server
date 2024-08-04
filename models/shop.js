@@ -11,6 +11,10 @@ const shopSchema = mongoose.Schema({
         ref: 'User',
         required: true
     },
+    followersCount: {
+        type: Number,
+        default: 0
+    }
 });
 
 exports.Shop = mongoose.model('Shop', shopSchema);

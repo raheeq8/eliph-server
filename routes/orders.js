@@ -37,9 +37,9 @@ router.get('/:id', async (req, res) => {
         if (!order) {
             return res.status(404).json({ message: 'The order with the given ID was not found.' });
         }
-        res.status(200).send(order);
+        return res.status(200).send(order);
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        return res.status(500).json({ success: false, message: error.message });
     }
 })
 
@@ -49,7 +49,7 @@ router.get(`/get/count`, async (req, res) => {
 
         const orderCount = await Orders.countDocuments();
 
-        res.send({
+        return res.status(200).send({
             success: true,
             orderCount: orderCount,
         });
@@ -64,95 +64,112 @@ router.get(`/get/count`, async (req, res) => {
 
 router.post('/create', async (req, res) => {
 
-    let order = new Orders({
-        name: req.body.name,
-        phoneNumber: req.body.phoneNumber,
-        address: req.body.address,
-        state: req.body.state,
-        city: req.body.city,
-        pincode: req.body.pincode,
-        amount: req.body.amount,
-        email: req.body.email,
-        userid: req.body.userid,
-        products: req.body.products,
-        shop: req.body.shop
-    });
-
-
-
-    if (!order) {
-        res.status(500).json({
-            error: err,
-            success: false
-        })
+    try {
+        let order = new Orders({
+            name: req.body.name,
+            phoneNumber: req.body.phoneNumber,
+            address: req.body.address,
+            state: req.body.state,
+            city: req.body.city,
+            pincode: req.body.pincode,
+            amount: req.body.amount,
+            email: req.body.email,
+            userid: req.body.userid,
+            products: req.body.products,
+            shop: req.body.shop
+        });
+    
+    
+    
+        if (!order) {
+            res.status(500).json({
+                error: err,
+                success: false
+            })
+        }
+    
+    
+        order = await order.save();
+        // Clear the cart for the user
+        await Cart.deleteMany({ userId: req.body.userid });
+        return res.status(201).json(order);
+    } catch (error) {     
+        console.log('order_create', error);
+        return res.status(500).json({ message: "Internal server error "})
     }
-
-
-    order = await order.save();
-    // Clear the cart for the user
-    await Cart.deleteMany({ userId: req.body.userid });
-    res.status(201).json(order);
 
 });
 
 
 router.delete('/:id', async (req, res) => {
 
-    const deletedOrder = await Orders.findByIdAndDelete(req.params.id);
-
-    if (!deletedOrder) {
-        res.status(404).json({
-            message: 'Order not found!',
-            success: false
+    try {
+        const deletedOrder = await Orders.findByIdAndDelete(req.params.id);
+    
+        if (!deletedOrder) {
+            return res.status(404).json({
+                message: 'Order not found!',
+                success: false
+            })
+        }
+    
+        return res.status(200).json({
+            success: true,
+            message: 'Order Deleted!'
         })
+    } catch (error) {
+        console.log('order_delete', error);
+        return res.status(500).json({ message: "Internal server error "})
     }
-
-    res.status(200).json({
-        success: true,
-        message: 'Order Deleted!'
-    })
 });
 
 
 router.put('/:id', async (req, res) => {
 
-    const order = await Orders.findByIdAndUpdate(
-        req.params.id,
-        {
-            name: req.body.name,
-            phoneNumber: req.body.phoneNumber,
-            address: req.body.address,
-            province: req.body.province,
-            city: req.body.city,
-            state: req.body.state,
-            amount: req.body.amount,
-            email: req.body.email,
-            userid: req.body.userid,
-            products: req.body.products,
-            status: req.body.status
-        },
-        { new: true }
-    )
-
-
-
-    if (!order) {
-        return res.status(500).json({
-            message: 'Order cannot be updated!',
-            success: false
-        })
+    try {
+        const order = await Orders.findByIdAndUpdate(
+            req.params.id,
+            {
+                name: req.body.name,
+                phoneNumber: req.body.phoneNumber,
+                address: req.body.address,
+                province: req.body.province,
+                city: req.body.city,
+                state: req.body.state,
+                amount: req.body.amount,
+                email: req.body.email,
+                userid: req.body.userid,
+                products: req.body.products,
+                status: req.body.status
+            },
+            { new: true }
+        )
+        if (!order) {
+            return res.status(500).json({
+                message: 'Order cannot be updated!',
+                success: false
+            })
+        }
+    
+        return res.status(200).send(order);
+    
+    } catch (error) {
+        console.log('order_put', error);
+        return res.status(500).json({ message: "Internal server error "})
     }
-
-    res.send(order);
-
 })
 
 
 router.get('/totalRevenue', async (req, res) => {
-    const orders = await Orders.find();
-    const totalOrders = orders.length;
-    const totalRevenue = orders.reduce((acc, order) => acc + order.subTotal, 0)
-    res.send(totalRevenue)
+    try {
+        const orders = await Orders.find();
+        const totalOrders = orders.length;
+        const totalRevenue = orders.reduce((acc, order) => acc + order.subTotal, 0)
+        return res.status(200).send(totalRevenue)
+    } catch (error) {
+        console.log('order_totalRevenue', error);
+        return res.status(500).json({ message: "Internal server error "})
+    }
 })
 
 router.get('/generate-receipt/:id', async (req, res) => {
@@ -209,7 +226,7 @@ router.get('/generate-receipt/:id', async (req, res) => {
     const receiptPath = path.join(receiptsDir, `receipt_${order._id}.pdf`);
     await fs.writeFile(receiptPath, pdfBytes);
 
-    res.json({ success: true, receiptUrl: `/receipts/receipt_${order._id}.pdf` });
+    return res.json({ success: true, receiptUrl: `/receipts/receipt_${order._id}.pdf` });
   } catch (error) {
     console.error('Error generating receipt:', error);
     return res.status(500).json({ success: false, message: 'Error generating receipt.' });
@@ -241,9 +258,9 @@ router.put('/cancel/:id', async (req, res) => {
       order.cancellationReason = reason;
       await order.save();
 
-      res.status(200).json({ success: true, message: 'Order cancelled successfully' });
+      return res.status(200).json({ success: true, message: 'Order cancelled successfully' });
   } catch (error) {
-      res.status(500).json({ success: false, message: error.message });
+      return res.status(500).json({ success: false, message: error.message });
   }
 });
 router.get('/monthly-sales', async (req, res) => {
@@ -263,9 +280,9 @@ router.get('/monthly-sales', async (req, res) => {
           }
       ]);
 
-      res.status(200).json(monthlySales);
+      return res.status(200).json(monthlySales);
   } catch (error) {
-      res.status(500).json({ success: false, message: error.message });
+      return res.status(500).json({ success: false, message: error.message });
   }
 });
 

@@ -18,52 +18,6 @@ cloudinary.config({
     secure: true
 });
 var imagesArr = [];
-// const storage = multer.diskStorage({
-
-//     destination: function (req, file, cb) {
-//         cb(null, "uploads");
-//     },
-//     filename: function (req, file, cb) {
-//         cb(null, `${Date.now()}_${file.originalname}`);
-
-//     },
-// })
-
-
-// const upload = multer({ storage: storage })
-
-// router.post(`/upload`, upload.array("images"), async (req, res) => {
-//     imagesArr = [];
-//     try {
-//         for (let i = 0; i < req .files?.length; i++) {
-
-//             const options = {
-//                 use_filename: true,
-//                 unique_filename: false,
-//                 overwrite: false,
-//             };
-
-//             const img = await cloudinary.uploader.upload(req.files[i].path, options,
-//                 function (error, result) {
-//                     imagesArr.push(result.secure_url);
-//                     fs.unlinkSync(`uploads/${req.files[i].filename}`);
-//                 });
-//         }
-
-//         let imagesUploaded = new ImageUpload({
-//             images: imagesArr,
-//         });
-
-//         imagesUploaded = await imagesUploaded.save();
-
-//         return res.status(200).json(imagesArr);
-
-//     } catch (error) {
-//         console.log(error);
-//     }
-
-
-// });
 
 
 const storage = multer.diskStorage({
@@ -75,10 +29,8 @@ const storage = multer.diskStorage({
     }
 });
 
-// Multer upload instance
 const upload = multer({ storage: storage });
 
-// POST /upload endpoint for uploading images
 router.post('/upload', async (req, res) => {
     try {
         // Use multer to handle file uploads
@@ -140,7 +92,6 @@ router.get('/', async (req, res) => {
     const perPage = parseInt(req.query.perPage);
     const totalPosts = await Product.countDocuments();
     const totalPages = Math.ceil(totalPosts / perPage);
-    const subCatName = req.query.subCatName;
 
     if (page > totalPages) {
         return res.status(404).json({ message: "Page Not Found" })
@@ -162,7 +113,7 @@ router.get('/', async (req, res) => {
 
 
         if (!productList) {
-            res.status(500).json({ success: false })
+            return res.status(500).json({ success: false })
         }
         return res.status(200).json({
             "products": filteredProducts,
@@ -178,7 +129,7 @@ router.get('/', async (req, res) => {
             .exec();
 
         if (!productList) {
-            res.status(500).json({ success: false })
+            return res.status(500).json({ success: false })
         }
         return res.status(200).json({
             "products": productList,
@@ -208,23 +159,33 @@ router.get('/', async (req, res) => {
 
 
 router.get(`/featured`, async (req, res) => {
-    const productList = await Product.find({ isFeatured: true });
-    if (!productList) {
-        return res.status(500).json({ success: false })
+    try {
+        const productList = await Product.find({ isFeatured: true });
+        if (!productList) {
+            return res.status(500).json({ success: false })
+        }
+    
+        return res.status(200).json(productList);
+    } catch (error) {      
+        console.log('product_featured', error);
+        return res.status(500).json({ message: "Internal server error "})
     }
-
-    return res.status(200).json(productList);
 });
 
 router.get(`/recentlyViewd`, async (req, res) => {
-    let productList = [];
-    productList = await RecentlyViewd.find(req.query).populate("category subCat shop");
-
-    if (!productList) {
-        return res.status(500).json({ success: false })
+    try {
+        let productList = [];
+        productList = await RecentlyViewd.find(req.query).populate("category subCat shop");
+    
+        if (!productList) {
+            return res.status(500).json({ success: false })
+        }
+    
+        return res.status(200).json(productList);
+    } catch (error) {       
+        console.log('product_recentlyViewd', error);
+        return res.status(500).json({ message: "Internal server error "})
     }
-
-    return res.status(200).json(productList);
 });
 
 router.post(`/recentlyViewd`, async (req, res) => {
@@ -408,83 +369,76 @@ router.delete('/deleteImage', async (req, res) => {
     }
 });
 
-// router.delete('/deleteImage', async (req, res) => {
-//     const imgUrl = req.query.img;
-//     const urlArr = imgUrl.split('/');
-//     const image = urlArr[urlArr.length - 1];
-//     const imageName = image.split('.')[0];
-//     const response = await cloudinary.uploader.destroy(imageName, (error, result) => {
-
-//     })
-//     if (response) {
-//         res.status(200).send(response);
-//     }
-// });
-
 router.delete('/:id', async (req, res) => {
-    const product = await Product.findById(req.params.id);
-    const images = product.images;
-
-    for (img of images) {
-        const imgUrl = img;
-        const urlArr = imgUrl.split('/');
-        const image = urlArr[urlArr.length - 1];
-
-        const imageName = image.split('.')[0];
-
-        if (imageName) {
-            cloudinary.uploader.destroy(imageName, (error, result) => {
-                // console.log(error, result);
-            })
+    try {
+        const product = await Product.findById(req.params.id);
+        const images = product.images;
+    
+        for (img of images) {
+            const imgUrl = img;
+            const urlArr = imgUrl.split('/');
+            const image = urlArr[urlArr.length - 1];
+    
+            const imageName = image.split('.')[0];
+    
+            if (imageName) {
+                cloudinary.uploader.destroy(imageName, (error, result) => {
+                    // console.log(error, result);
+                })
+            }
         }
-
-        //  console.log(imageName)
+    
+        const deleteProduct = await Product.findByIdAndDelete(req.params.id);
+        if (!deleteProduct) {
+            return res.status(404).json({ message: "The product with the given id not found", success: false })
+        }
+        return res.status(200).json({
+            message: "product deleted",
+            success: true
+        })
+    } catch (error) {
+        console.log('product_delete', error);
+        return res.status(500).json({ message: "Internal server error "})     
     }
-
-    const deleteProduct = await Product.findByIdAndDelete(req.params.id);
-    if (!deleteProduct) {
-        return res.status(404).json({ message: "The product with the given id not found", success: false })
-    }
-    return res.status(200).json({
-        message: "product deleted",
-        success: true
-    })
 });
 
 router.put('/:id', async (req, res) => {
-
-
-    const product = await Product.findByIdAndUpdate(req.params.id, {
-        name: req.body.name,
-        description: req.body.description,
-        images: req.body.images,
-        brand: req.body.brand,
-        price: req.body.price,
-        oldPrice: req.body.oldPrice,
-        expense: req.body.expense,
-        category: req.body.category,
-        subCat: req.body.subCat,
-        subCatId: req.body.subCatId,
-        catName: req.body.catName,
-        subCatName: req.body.subCatName,
-        countInStock: req.body.countInStock,
-        rating: req.body.rating,
-        isFeatured: req.body.isFeatured,
-        discount: req.body.discount,
-        productRam: req.body.productRam,
-        size: req.body.size,
-        color: req.body.color,
-        detail: req.body.detail,
-        productWeight: req.body.productWeight,
-    }, { new: true });
-    if (!product) {
-        return res.status(404).json({ message: "The product with the given cannot be updated", success: false })
+    try {
+        const product = await Product.findByIdAndUpdate(req.params.id, {
+            name: req.body.name,
+            description: req.body.description,
+            images: req.body.images,
+            brand: req.body.brand,
+            price: req.body.price,
+            oldPrice: req.body.oldPrice,
+            expense: req.body.expense,
+            category: req.body.category,
+            subCat: req.body.subCat,
+            subCatId: req.body.subCatId,
+            catName: req.body.catName,
+            subCatName: req.body.subCatName,
+            countInStock: req.body.countInStock,
+            rating: req.body.rating,
+            isFeatured: req.body.isFeatured,
+            discount: req.body.discount,
+            productRam: req.body.productRam,
+            size: req.body.size,
+            color: req.body.color,
+            detail: req.body.detail,
+            productWeight: req.body.productWeight,
+        }, { new: true });
+        if (!product) {
+            return res.status(404).json({ message: "The product with the given cannot be updated", success: false })
+        }
+        imagesArr = [];
+        return res.status(200).json({
+            message: "product updated",
+            success: true
+        })
+    } catch (error) {
+        console.log('product_put', error);
+        return res.status(500).json({ message: "Internal server error "})
     }
-    imagesArr = [];
-    return res.status(200).json({
-        message: "product updated",
-        success: true
-    })
 })
 
 
