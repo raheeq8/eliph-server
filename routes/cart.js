@@ -59,7 +59,7 @@ router.post('/add', async (req, res) => {
             return res.status(401).json({ status: false, msg: "Product already added in the cart" })
         }
     } catch (error) {
-        console.log(first)
+        console.log(error)
     }
 
 
