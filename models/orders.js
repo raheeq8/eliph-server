@@ -83,7 +83,7 @@ const ordersSchema = mongoose.Schema({
     },
     status:{
         type:String,
-        enum: ["Pending","Confirm","Shipped","Delivered", "Cancelled"],
+        enum: ["Pending","Confirm","Shipped","Delivered", "Cancelled","Rejected"],
         default:"Pending"
     },
     cancellationReason: {
@@ -94,7 +94,17 @@ const ordersSchema = mongoose.Schema({
         type: Date,
         default: Date.now,
     },
-
+    returnRequested: {
+        type: Boolean,
+        default: false
+    },
+    returnReason: {
+        type: String,
+        default: ''
+    },
+    returnDate: {
+        type: Date,
+    }
 })
 
 ordersSchema.virtual('id').get(function () {

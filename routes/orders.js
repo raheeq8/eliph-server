@@ -232,10 +232,6 @@ router.get('/generate-receipt/:id', async (req, res) => {
     return res.status(500).json({ success: false, message: 'Error generating receipt.' });
   }
 });
-
-
-
-
 router.put('/cancel/:id', async (req, res) => {
   try {
       const orderId = req.params.id;
@@ -285,7 +281,37 @@ router.get('/monthly-sales', async (req, res) => {
       return res.status(500).json({ success: false, message: error.message });
   }
 });
+router.post('/return', async (req, res) => {
+    try {
+        const { orderId, reason } = req.body;
+
+        if (!orderId || !reason) {
+            return res.status(400).json({ message: 'Order ID and return reason are required' });
+        }
+
+        const order = await Orders.findById(orderId);
+        if (!order) {
+            return res.status(404).json({ message: 'Order not found' });
+        }
+
+        if (order.returnRequested) {
+            return res.status(400).json({ message: 'Return already requested' });
+        }
+
+        if (order.status !== 'Delivered') {
+            return res.status(400).json({ success: false, message: 'Order can only be Return when the status is Delivered' });
+        }
+
+        order.returnRequested = true;
+        order.returnReason = reason;
+        order.returnDate = new Date();
+
+        await order.save();
+
+        return res.status(200).json({ message: 'Return request successful', order });
+    } catch (error) {
+        return res.status(500).json({ message: 'Server error', error });
+    }
+});
 
 module.exports = router;
-
-
