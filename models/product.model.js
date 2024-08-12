@@ -5,21 +5,15 @@ const productSchema = mongoose.Schema({
         // required: true,
         unique: true,
         default: function () {
-            const prefix = 'eliphstore';
+            const prefix = 'hibuyshopping';
             const length = 30;
             const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
             let result = '';
-
-            // Include a timestamp to help ensure uniqueness
             const timestamp = Date.now().toString(36);
-
-            // Generate the random part of the ID
             for (let i = 0; i < length; i++) {
                 const randomIndex = Math.floor(Math.random() * chars.length);
                 result += chars[randomIndex];
             }
-
-            // Combine prefix, timestamp, and random string
             return `${prefix}-${timestamp}-${result}`;
         }
     },

@@ -10,6 +10,7 @@ const jwt = require("jsonwebtoken");
 
 const multer = require('multer');
 const fs = require("fs");
+const { sendForgetPasswordEmail } = require('../helper/sendForgetPasswordEmail.js');
 
 const cloudinary = require('cloudinary').v2;
 
@@ -19,16 +20,8 @@ cloudinary.config({
     api_secret: process.env.cloudinary_Config_api_secret,
     secure: true
 });
-
-
-
 var imagesArr = [];
-
-
-
-
 const storage = multer.diskStorage({
-
     destination: function (req, file, cb) {
         cb(null, "uploads");
     },
@@ -38,12 +31,7 @@ const storage = multer.diskStorage({
 
     },
 })
-
-
 const upload = multer({ storage: storage })
-
-
-
 router.post(`/upload`, upload.array("images"), async (req, res) => {
     imagesArr = [];
 
@@ -77,100 +65,7 @@ router.post(`/upload`, upload.array("images"), async (req, res) => {
     } catch (error) {
         console.log(error);
     }
-
-
 });
-
-
-
-
-// router.post(`/signup`, async (req, res) => {
-//     const { name, phone, email, password, isAdmin } = req.body;
-
-//     try {
-
-//         const existingVerifiedUser = await User.findOne({
-//             email: email,
-//             isVerified: true,
-//         });
-//         const existingUserByPh = await User.findOne({ phone: phone });
-
-//         if (existingVerifiedUser && existingUserByPh) {
-//             return res.status(400).json({ error: true, msg: "user already exist!" })
-//         }
-
-//         const existingUserByEmail = await User.findOne({
-//             email,
-//         });
-
-//         const verifyCodeEmail = Math.floor(
-//             100000 + Math.random() * 900000
-//         ).toString();
-
-//         if (existingUserByEmail) {
-//             if (existingUserByEmail.isVerified) {
-//                 return res.status(400).json({ error: true, msg: "user already exist!" })
-//             } else {
-//                 const hashPassword = await bcrypt.hash(password, 10);
-//                 existingUserByEmail.password = hashPassword
-//                 existingUserByEmail.verifyCode = verifyCodeEmail
-//                 existingUserByEmail.verifyCodeExpiry = new Date(Date.now() + 3600000)
-//             }
-//         } else {
-//             const hashPassword = await bcrypt.hash(password, 10);
-//             const expiryDate = new Date();
-//             expiryDate.setHours(expiryDate.getHours() + 1);
-//             const result = await User.create({
-//                 name: name,
-//                 phone: phone,
-//                 email: email,
-//                 verifyCode: verifyCodeEmail,
-//                 verifyCodeExpiry: expiryDate,
-//                 isVerified: false,
-//                 password: hashPassword,
-//                 isAdmin: isAdmin
-//             });
-
-//             // Create a shop for the user
-//             let shop = await Shop.create({
-//                 name: `${name}'s Shop`,
-//                 owner: result._id
-//             });
-//             const token = jwt.sign({ email: result.email, id: result._id }, process.env.JSON_WEB_TOKEN_SECRET_KEY);
-
-//             res.status(200).json({
-//                 user: result,
-//                 shop: shop,
-//                 token: token
-//             })
-//         }
-
-//         // send verification email
-//         const emailResponse = await sendVerificationEmail(
-//             email,
-//             name,
-//             verifyCodeEmail
-//         )
-
-//         if (!emailResponse.success) {
-//             return res.status(500).json({
-//                 success: false,
-//                 message: emailResponse.message
-//             })
-//         }
-
-//         return res.status(201).json({
-//             success: true,
-//             message: "User Registered successfully please verify your email"
-//         })
-
-
-
-//     } catch (error) {
-//         console.log(error);
-//         res.status(500).json({ error: true, msg: "something went wrong" });
-//     }
-// })
 router.post(`/signup`, async (req, res) => {
     const { name, phone, email, password, isAdmin } = req.body;
 
@@ -245,7 +140,6 @@ router.post(`/signup`, async (req, res) => {
         return res.status(500).json({ error: true, msg: "Something went wrong." });
     }
 });
-
 router.post(`/signin`, async (req, res) => {
     const { email, password } = req.body;
 
@@ -267,13 +161,6 @@ router.post(`/signin`, async (req, res) => {
 
         const token = jwt.sign({ email: existingUser.email, id: existingUser._id }, process.env.JSON_WEB_TOKEN_SECRET_KEY);
 
-        console.log({
-            user: existingUser,
-            token: token,
-            shop: shop,
-            msg: "user Authenticated"
-        })
-
         return res.status(200).send({
             user: existingUser,
             token: token,
@@ -286,7 +173,6 @@ router.post(`/signin`, async (req, res) => {
     }
 
 })
-
 router.put(`/changePassword/:id`, async (req, res) => {
 
     try {
@@ -339,8 +225,125 @@ router.put(`/changePassword/:id`, async (req, res) => {
 
 
 })
+router.post('/forgotPassword', async (req, res) => {
+    const { email } = req.body;
 
+    try {
+        const user = await User.findOne({ email });
 
+        if (!user) {
+            return res.status(404).json({ error: true, msg: 'User not found!' });
+        }
+
+        const verifyCodeEmail = Math.floor(100000 + Math.random() * 900000).toString();
+
+        const token = jwt.sign({ email: user.email, id: user._id }, process.env.JSON_WEB_TOKEN_SECRET_KEY);
+
+        user.verifyCode = verifyCodeEmail;
+        user.verifyCodeExpiry = Date.now() + 3600000; // 1 hour
+        await user.save();
+
+        // Send reset email
+        const emailResponse = await sendForgetPasswordEmail(email,user.name, verifyCodeEmail);
+
+        if (!emailResponse.success) {
+            return res.status(500).json({
+                success: false,
+                message: emailResponse.message
+            });
+        }
+
+        return res.status(200).send({
+            user: user,
+            token: token,
+            msg: "user Authenticated"
+        })
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ error: true, msg: 'Something went wrong.' });
+    }
+});
+router.post('/verifyEmail', async (req, res) => {
+    // const { email, verificationCode } = req.body;
+
+    // try {
+    //     const user = await User.findOne({ email });
+
+    //     if (!user) {
+    //         return res.status(404).json({ error: true, msg: 'User not found!' });
+    //     }
+
+    //     if (user.verifyCode !== verificationCode || user.verifyCodeExpiry < Date.now()) {
+    //         return res.status(400).json({ error: true, msg: 'Invalid or expired verification code.' });
+    //     }
+
+    //     user.isVerified = true;
+    //     user.verifyCode = undefined;
+    //     user.verifyCodeExpiry = undefined;
+    //     await user.save();
+
+    //     return res.status(200).json({
+    //         success: true,
+    //         message: 'Email verified successfully.'
+    //     });
+
+    // } catch (error) {
+    //     console.log(error);
+    //     return res.status(500).json({ error: true, msg: 'Something went wrong.' });
+    // }
+    try {
+        const { email, code } = req.body;
+        const user = await User.findOne({ email })
+        if(!user){
+            return res.status(404).json({ success: false, message: "User not found"})
+        }
+        const isCodeValid = user.verifyCode === code
+        const isCodeNotExpired = new Date(user.verifyCodeExpiry) > new Date()
+        if(isCodeValid && isCodeNotExpired){
+            user.isVerified = true
+            await user.save();
+            return res.status(201).json({ success: true, message: "User verified successfully" }) 
+        }else if(!isCodeNotExpired){
+            return res.status(401).json({ success: false, message: "Verify code is expired, please signup again"})
+        }else if(!isCodeValid){
+            return res.status(401).json({ success: false, message: "Verify code is invalid, please signup again"})
+        }
+    } catch (error) {
+        console.log(`Error while verify user ${error}`)
+        return res.status(500).json({ message: "Internal server error "})
+    }
+});
+router.post('/resetPassword', async (req, res) => {
+    const { email, newPassword } = req.body;
+
+    try {
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(404).json({ error: true, msg: 'User not found!' });
+        }
+
+        if (!user.verifyCode || user.verifyCodeExpiry < Date.now()) {
+            return res.status(400).json({ error: true, msg: 'Invalid or expired reset token.' });
+        }
+
+        // Hash the new password
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        user.password = hashedPassword;
+        await user.save();
+
+        return res.status(200).json({
+            success: true,
+            message: 'Password has been reset successfully.'
+        });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ error: true, msg: 'Something went wrong.' });
+    }
+});
 
 router.get(`/`, async (req, res) => {
     try {
@@ -369,8 +372,6 @@ router.get('/:id', async (req, res) => {
         return res.status(500).json({ message: 'Internal server error.' })
     }
 })
-
-
 router.delete('/:id', (req, res) => {
     User.findByIdAndDelete(req.params.id).then(user => {
         if (user) {
@@ -382,10 +383,6 @@ router.delete('/:id', (req, res) => {
         return res.status(500).json({ success: false, error: err })
     })
 })
-
-
-
-
 router.get(`/get/count`, async (req, res) => {
     try {
         const userCount = await User.countDocuments()
@@ -401,9 +398,6 @@ router.get(`/get/count`, async (req, res) => {
         return res.status(500).json({ message: 'Internal server error' })
     }
 })
-
-
-
 router.put('/:id', async (req, res) => {
 
     const { name, phone, email } = req.body;
@@ -439,42 +433,6 @@ router.put('/:id', async (req, res) => {
         return res.status(500).json({ message: 'Internal server error' })
     }
 })
-
-
-// router.put('/:id',async (req, res)=> {
-
-//     const { name, phone, email, password } = req.body;
-
-//     const userExist = await User.findById(req.params.id);
-
-//     let newPassword
-
-//     if(req.body.password) {
-//         newPassword = bcrypt.hashSync(req.body.password, 10)
-//     } else {
-//         newPassword = userExist.passwordHash;
-//     }
-
-//     const user = await User.findByIdAndUpdate(
-//         req.params.id,
-//         {
-//             name:name,
-//             phone:phone,
-//             email:email,
-//             password:newPassword,
-//             images: imagesArr,
-//         },
-//         { new: true}
-//     )
-
-//     if(!user)
-//     return res.status(400).send('the user cannot be Updated!')
-
-//     res.send(user);
-// })
-
-
-
 router.delete('/deleteImage', async (req, res) => {
     try {
         const imgUrl = req.query.img;
@@ -497,7 +455,6 @@ router.delete('/deleteImage', async (req, res) => {
     }
 
 });
-
 router.post('/follow/:shopId', async (req, res) => {
     const userId = req.body.userId;
     const { shopId } = req.params;
@@ -522,8 +479,6 @@ router.post('/follow/:shopId', async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
-
-
 router.post('/unfollow/:shopId', async (req, res) => {
     const userId = req.body.userId; // Extract userId from request body
     const { shopId } = req.params;
@@ -548,8 +503,6 @@ router.post('/unfollow/:shopId', async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
-
-
 router.get('/followed-shops', async (req, res) => {
     try {
       const user = await User.find(req.query).populate('followedShops');

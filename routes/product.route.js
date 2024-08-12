@@ -348,9 +348,6 @@ router.post('/create', async (req, res) => {
 router.delete('/deleteImage', async (req, res) => {
     try {
         const imgUrl = req.query.img;
-
-        // console.log(imgUrl)
-
         const urlArr = imgUrl.split('/');
         const image = urlArr[urlArr.length - 1];
 
