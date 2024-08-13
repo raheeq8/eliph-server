@@ -510,7 +510,7 @@ router.get('/followed-shops', async (req, res) => {
         return res.status(404).json({ message: 'User not found' });
       }
   
-      return res.json(user.followedShops); // Assuming followedShops is an array of shop objects
+      return res.json(user.followedShops);
     } catch (error) {
       console.error('Error fetching followed shops:', error);
       res.status(500).json({ message: 'Internal Server Error' });

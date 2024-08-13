@@ -43,6 +43,7 @@ const sellerRoutes = require('./routes/seller.js');
 const contactRoutes = require('./routes/contact.js');
 const searchDashboardRoute = require('./routes/searchDashboard.js');
 const subscriptionRoute = require('./routes/subscription.js');
+const notificationRoute = require('./routes/notification.js');
 
 
 
@@ -69,6 +70,7 @@ app.use('/api/seller', sellerRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/searchdashboard', searchDashboardRoute);
 app.use('/api/subscription', subscriptionRoute);
+app.use('/api/notifications', notificationRoute);
 
 // Database connection
 mongoose.connect(process.env.MONGO_URI)

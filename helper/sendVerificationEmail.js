@@ -9,9 +9,9 @@ const sendVerificationEmail = async (
 ) => {
   try {
     await resend.emails.send({
-      from: 'Eliph Store <noreply@eliphstore.com>',
+      from: 'HiBuyShopping <noreply@hibuyshopping.com>',
       to: email,
-      subject: 'Eliph Store | Verification code',
+      subject: 'HiBuyShopping | Verification code',
       react: VerificationEmail({ name, otp: verifyCode }),
     });
     return { success: true, message: 'Verification email send successfully' }

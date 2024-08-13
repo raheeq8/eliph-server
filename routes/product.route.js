@@ -306,6 +306,7 @@ router.post('/create', async (req, res) => {
         let product = new Product({
             staticId: req.body.staticId,
             name: req.body.name,
+            productFor: req.body.productFor,
             description: req.body.description,
             images: images_Array,
             brand: req.body.brand,
@@ -354,7 +355,6 @@ router.delete('/deleteImage', async (req, res) => {
         const imageName = image.split('.')[0];
 
         const response = await cloudinary.uploader.destroy(imageName, (error, result) => {
-            // console.log(error, res)
         })
 
         if (response) {
@@ -403,6 +403,7 @@ router.put('/:id', async (req, res) => {
     try {
         const product = await Product.findByIdAndUpdate(req.params.id, {
             name: req.body.name,
+            productFor: req.body.productFor,
             description: req.body.description,
             images: req.body.images,
             brand: req.body.brand,

@@ -2,7 +2,6 @@ const mongoose = require('mongoose');
 const productSchema = mongoose.Schema({
     staticId: {
         type: String,
-        // required: true,
         unique: true,
         default: function () {
             const prefix = 'hibuyshopping';
@@ -22,6 +21,9 @@ const productSchema = mongoose.Schema({
     name: {
         type: String,
         required: true
+    },
+    productFor: {
+        type: String
     },
     description: {
         type: String,

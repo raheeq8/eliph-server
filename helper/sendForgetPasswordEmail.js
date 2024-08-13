@@ -9,9 +9,9 @@ const sendForgetPasswordEmail = async (
 ) => {
   try {
     await resend.emails.send({
-      from: 'Eliph Store <noreply@eliphstore.com>',
+      from: 'HiBuyShopping <support@hibuyshopping.com>',
       to: email,
-      subject: 'Eliph Store | Verification code',
+      subject: 'HiBuyShopping | Verification code',
       react: EmailForgetPassword({ name, otp: verifyCode }),
     });
     return { success: true, message: 'Verification email send successfully' }

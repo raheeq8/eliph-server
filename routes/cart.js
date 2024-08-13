@@ -4,7 +4,6 @@ const router = express.Router();
 
 
 router.get(`/`, async (req, res) => {
-
     try {
         const cartList = await Cart.find(req.query);
         if (!cartList) {
