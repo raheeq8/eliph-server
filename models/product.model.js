@@ -49,16 +49,16 @@ const productSchema = mongoose.Schema({
         type: Number,
         default: 0
     },
-    category: {
+    category: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: "Category",
         required: true
-    },
-    subCat: {
+    }],
+    subCat: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: "SubCat",
         required: true
-    },
+    }],
     countInStock: {
         type: Number,
         required: true
@@ -79,10 +79,10 @@ const productSchema = mongoose.Schema({
         type: String,
         default: ''
     },
-    subCatId: {
+    subCatId: [{
         type: String,
         default: ''
-    },
+    }],
     discount: {
         type: Number,
         required: true,

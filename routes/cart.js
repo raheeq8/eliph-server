@@ -15,9 +15,6 @@ router.get(`/`, async (req, res) => {
         return res.status(500).json({ success: false })
     }
 });
-
-
-
 router.post('/add', async (req, res) => {
 
     try {
@@ -38,11 +35,9 @@ router.post('/add', async (req, res) => {
                 quantity: req.body.quantity,
                 subTotal: req.body.subTotal,
                 productId: req.body.productId,
+                countInStock: req.body.countInStock,
                 userId: req.body.userId
             });
-
-
-
             if (!cartList) {
                 return res.status(500).json({
                     error: err,
@@ -64,6 +59,51 @@ router.post('/add', async (req, res) => {
 
 
 });
+
+// router.post('/add-to-cart', async (req, res) => {
+//     try {
+//         const cartItem = await Cart.find({ staticId: req.body.staticId, productId: req.body.productId, userId: req.body.userId });
+//         if (cartItem.products.includes(staticId)) {
+//             return res.status(400).json({ message: 'Product already in cart.' });
+//         }
+//         if (cartItem.length === 0) {
+//             let cartList = new Cart({
+//                 staticId: req.body.staticId,
+//                 productTitle: req.body.productTitle,
+//                 shop: req.body.shop,
+//                 productSize: req.body.productSize,
+//                 productWeight: req.body.productWeight,
+//                 productColor: req.body.productColor,
+//                 productRam: req.body.productRam,
+//                 image: req.body.image,
+//                 rating: req.body.rating,
+//                 price: req.body.price,
+//                 quantity: req.body.quantity,
+//                 subTotal: req.body.subTotal,
+//                 productId: req.body.productId,
+//                 userId: req.body.userId
+//             });
+
+
+
+//             if (!cartList) {
+//                 return res.status(500).json({
+//                     error: err,
+//                     success: false
+//                 })
+//             }
+
+
+//             cartList = await cartList.save();
+
+//             return res.status(201).json(cartList);
+//         } else {
+//             return res.status(401).json({ status: false, msg: "Product already added in the cart" })
+//         }
+//     } catch (error) {
+//         console.log(error)
+//     }
+// });
 
 
 router.delete('/:id', async (req, res) => {

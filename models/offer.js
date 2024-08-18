@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const cartSchema = mongoose.Schema({
+const offerSchema = mongoose.Schema({
     staticId: {
         type: String,
         required: true,
@@ -58,13 +58,13 @@ const cartSchema = mongoose.Schema({
     }
 })
 
-cartSchema.virtual('id').get(function () {
+offerSchema.virtual('id').get(function () {
     return this._id.toHexString();
 });
 
-cartSchema.set('toJSON', {
+offerSchema.set('toJSON', {
     virtuals: true,
 });
 
-exports.Cart = mongoose.model('Cart', cartSchema);
-exports.cartSchema = cartSchema;
+exports.Offer = mongoose.model('Offer', offerSchema);
+exports.offerSchema = offerSchema;

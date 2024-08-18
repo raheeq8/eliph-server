@@ -18,6 +18,15 @@ const PORT = process.env.PORT || 8080
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(express.static("uploads"));
+// app.use((err, req, res, next) => {
+//     console.error('Unhandled error:', err);
+//     return res.status(500).json({ message: 'Server encountered an error. Please try again later.' });
+// });
+// app.use((req, res, next) => {
+//     return res.setTimeout(10000, () => { 
+//        return res.status(408).json({ message: 'Request timeout. Please check your internet connection and try again.' });
+//     });
+// });
 // app.use(authJwt())
 
 // Routes
@@ -44,6 +53,7 @@ const contactRoutes = require('./routes/contact.js');
 const searchDashboardRoute = require('./routes/searchDashboard.js');
 const subscriptionRoute = require('./routes/subscription.js');
 const notificationRoute = require('./routes/notification.js');
+const offerRoute = require('./routes/offers.js');
 
 
 
@@ -71,6 +81,7 @@ app.use('/api/contact', contactRoutes);
 app.use('/api/searchdashboard', searchDashboardRoute);
 app.use('/api/subscription', subscriptionRoute);
 app.use('/api/notifications', notificationRoute);
+app.use('/api/offers', offerRoute);
 
 // Database connection
 mongoose.connect(process.env.MONGO_URI)

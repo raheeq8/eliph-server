@@ -156,7 +156,14 @@ router.get('/', async (req, res) => {
     }
 
 });
-
+router.get('/600-or-less', async (req, res) => {
+    try {
+        const products = await Product.find({ price: { $lte: 600 } });
+        return res.json(products);
+    } catch (err) {
+        return res.status(500).json({ message: err.message });
+    }
+});
 
 router.get(`/featured`, async (req, res) => {
     try {
@@ -259,7 +266,6 @@ router.get('/staticId/:staticId', async (req, res) => {
         return res.status(500).json({ message: error.message });
     }
 });
-// Get products by shopId
 router.get('/shop/:shopId', async (req, res) => {
     try {
         const products = await Product.find({ shop: req.params.shop });
@@ -282,7 +288,6 @@ router.get(`/get/count`, async (req, res) => {
         console.log(error)
     }
 })
-
 router.post('/create', async (req, res) => {
 
     try {

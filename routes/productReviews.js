@@ -143,7 +143,6 @@ router.get('/eligible-for-review/:customerId', async (req, res) => {
 
         const productIds = orders.flatMap(order => order.products.map(p => p.productId));
 
-        // Fetch products eligible for review
         const products = await Product.find({ _id: { $in: productIds } });
 
         return res.status(200).json(products);
