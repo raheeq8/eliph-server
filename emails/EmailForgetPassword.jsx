@@ -82,3 +82,4 @@ const EmailForgetPassword = ({ name, otp }) => {
 };
 
 module.exports = { EmailForgetPassword };
+

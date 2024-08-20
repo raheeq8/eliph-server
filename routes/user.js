@@ -116,16 +116,7 @@ router.post(`/signup`, async (req, res) => {
         }
 
         const token = jwt.sign({ email: result.email, id: result._id }, process.env.JSON_WEB_TOKEN_SECRET_KEY);
-
-        // send verification email
         const emailResponse = await sendVerificationEmail(email, name, verifyCodeEmail);
-
-        if (!emailResponse.success) {
-            return res.status(500).json({
-                success: false,
-                message: emailResponse.message
-            });
-        }
 
         return res.status(201).json({
             success: true,
@@ -242,17 +233,7 @@ router.post('/forgotPassword', async (req, res) => {
         user.verifyCode = verifyCodeEmail;
         user.verifyCodeExpiry = Date.now() + 3600000; // 1 hour
         await user.save();
-
-        // Send reset email
         const emailResponse = await sendForgetPasswordEmail(email,user.name, verifyCodeEmail);
-
-        if (!emailResponse.success) {
-            return res.status(500).json({
-                success: false,
-                message: emailResponse.message
-            });
-        }
-
         return res.status(200).send({
             user: user,
             token: token,

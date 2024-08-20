@@ -12,7 +12,7 @@ const { PDFDocument, rgb } = require('pdf-lib');
 
 router.get(`/`, async (req, res) => {
     try {
-        const ordersList = await Orders.find(req.query)
+        const ordersList = await Orders.find(req.query).populate("shop")
         if (!ordersList) {
             return res.status(500).json({ success: false })
         }

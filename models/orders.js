@@ -39,11 +39,11 @@ const ordersSchema = mongoose.Schema({
     },
     products: [
         {
-            productId:{
-                type:String
+            productId: {
+                type: String
             },
-            staticId:{
-                type:String
+            staticId: {
+                type: String
             },
             productTitle: {
                 type: String
@@ -60,31 +60,32 @@ const ordersSchema = mongoose.Schema({
             productRam: {
                 type: String
             },
-            shop:{
+            shop: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Shop'
+            },
+            quantity: {
+                type: Number
+            },
+            price: {
+                type: Number
+            },
+            image: {
                 type: String
             },
-            quantity:{
-                type:Number
-            },
-            price:{
-                type:Number
-            },
-            image:{
-                type:String
-            },
-            subTotal:{
-                type:Number
+            subTotal: {
+                type: Number
             }
         }
     ],
-    shop:{
-        type: String,
-        required: true
+    shop: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Shop'
     },
-    status:{
-        type:String,
-        enum: ["Pending","Confirm","Shipped","Delivered", "Cancelled","Rejected"],
-        default:"Pending"
+    status: {
+        type: String,
+        enum: ["Pending", "Confirm", "Shipped", "Delivered", "Cancelled", "Rejected"],
+        default: "Pending"
     },
     cancellationReason: {
         type: String,
