@@ -54,6 +54,7 @@ const searchDashboardRoute = require('./routes/searchDashboard.js');
 const subscriptionRoute = require('./routes/subscription.js');
 const notificationRoute = require('./routes/notification.js');
 const offerRoute = require('./routes/offers.js');
+const keywordsRoute = require('./routes/keywords.js');
 
 
 
@@ -82,6 +83,7 @@ app.use('/api/searchdashboard', searchDashboardRoute);
 app.use('/api/subscription', subscriptionRoute);
 app.use('/api/notifications', notificationRoute);
 app.use('/api/offers', offerRoute);
+app.use('/api/keywords', keywordsRoute);
 
 // Database connection
 mongoose.connect(process.env.MONGO_URI)

@@ -9,7 +9,7 @@ router.get(`/`, async (req, res) => {
         const additionalDetailsList = await AdditionalDetails.find(req.query);
 
         if (!additionalDetailsList) {
-           return res.status(500).json({ success: false })
+           return res.status(404).json({ success: false })
         }
 
         return res.status(200).json(additionalDetailsList);
@@ -34,39 +34,29 @@ router.get('/:id', async (req, res) => {
 
 
 router.post('/create', async (req, res) => {
-    
     let additionalDetails = new AdditionalDetails({
         detail: req.body.detail,
         shop: req.body.shop
     });
-
-
-
     if (!additionalDetails) {
-        return res.status(500).json({
+        return res.status(401).json({
             error: err,
             success: false
         })
     }
-
-
     additionalDetails = await additionalDetails.save();
-
     return res.status(201).json(additionalDetails);
-
 });
 
 
 router.delete('/:id', async (req, res) => {
     const deletedItem = await AdditionalDetails.findByIdAndDelete(req.params.id);
-
     if (!deletedItem) {
         return res.status(404).json({
             message: 'Item not found!',
             success: false
         })
     }
-
     return res.status(200).json({
         success: true,
         message: 'Item Deleted!'

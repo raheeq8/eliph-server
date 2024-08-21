@@ -51,16 +51,16 @@ const recentlyViewdSchema = mongoose.Schema({
         type:String,
         default:''
     },
-    category: {
+    category: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Category',
         required: true
-    },
-    subCat: {
+    }],
+    subCat: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'SubCat',
         required: true
-    },
+    }],
     countInStock: {
         type: Number,
         required: true,

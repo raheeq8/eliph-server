@@ -13,6 +13,7 @@ router.get('/', async (req, res) => {
         const items = await Product.find({
             $or: [
                 { name: { $regex: query, $options: 'i' } },
+                { keyword: { $regex: query, $options: 'i' } },
                 { brand: { $regex: query, $options: 'i' } },
                 { productFor: { $regex: query, $options: 'i' } },
                 { catName: { $regex: query, $options: 'i' } },

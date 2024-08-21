@@ -111,6 +111,12 @@ const productSchema = mongoose.Schema({
             default: null,
         }
     ],
+    keyword: [
+        {
+            type: String,
+            default: null,
+        }
+    ],
     productWeight: [
         {
             type: String,
