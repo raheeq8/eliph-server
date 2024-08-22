@@ -157,9 +157,21 @@ router.get('/', async (req, res) => {
     }
 
 });
+
 router.get('/600-or-less', async (req, res) => {
     try {
         const products = await Product.find({ price: { $lte: 600 } });
+        return res.json(products);
+    } catch (err) {
+        return res.status(500).json({ message: err.message });
+    }
+});
+
+// Route to get products with 50% or more discount
+router.get('/50-or-more-discount', async (req, res) => {
+    try {
+        const products = await Product.find({ discount: { $gte: 0.5 } });
+        
         return res.json(products);
     } catch (err) {
         return res.status(500).json({ message: err.message });
@@ -313,6 +325,7 @@ router.post('/create', async (req, res) => {
             staticId: req.body.staticId,
             name: req.body.name,
             productFor: req.body.productFor,
+            itemFor: req.body.itemFor,
             description: req.body.description,
             images: images_Array,
             brand: req.body.brand,
@@ -411,6 +424,7 @@ router.put('/:id', async (req, res) => {
         const product = await Product.findByIdAndUpdate(req.params.id, {
             name: req.body.name,
             productFor: req.body.productFor,
+            itemFor: req.body.itemFor,
             description: req.body.description,
             images: req.body.images,
             brand: req.body.brand,

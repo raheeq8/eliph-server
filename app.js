@@ -11,7 +11,6 @@ app.use(express.json());
 app.use(cors());
 app.options('*', cors());
 app.use('/receipts', express.static(path.join(__dirname, 'receipts')));
-
 // PORT
 const PORT = process.env.PORT || 8080
 
