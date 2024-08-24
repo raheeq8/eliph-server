@@ -111,6 +111,7 @@ router.post(`/signup`, async (req, res) => {
         if (result.isAdmin === true) {
             shop = await Shop.create({
                 name: `${name}'s Shop`,
+                email: email,
                 owner: result._id
             });
         }
