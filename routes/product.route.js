@@ -170,13 +170,14 @@ router.get('/600-or-less', async (req, res) => {
 // Route to get products with 50% or more discount
 router.get('/50-or-more-discount', async (req, res) => {
     try {
-        const products = await Product.find({ discount: { $gte: 0.5 } });
+        const products = await Product.find({ discount: { $gte: 50 } });  // 50% or more
         
         return res.json(products);
     } catch (err) {
         return res.status(500).json({ message: err.message });
     }
 });
+
 
 router.get(`/featured`, async (req, res) => {
     try {
