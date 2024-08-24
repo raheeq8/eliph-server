@@ -11,6 +11,40 @@ const { PDFDocument, rgb } = require('pdf-lib');
 const { User } = require('../models/user');
 const nodemailer = require('nodemailer');
 
+const countOrdersByStatusAndShop = async (status, shopId) => {
+    try {
+      const count = await Orders.countDocuments({ status, shopId });
+      return count;
+    } catch (error) {
+      console.error(`Error counting ${status} orders for shop ${shopId}:`, error);
+      throw error;
+    }
+};
+
+router.get('/order-counts/:shopId', async (req, res) => {
+    const { shopId } = req.params;
+  
+    try {
+      const pendingCount = await countOrdersByStatusAndShop('Pending', shopId);
+      const confirmedCount = await countOrdersByStatusAndShop('Confirm', shopId);
+      const shippedCount = await countOrdersByStatusAndShop('Shipped', shopId);
+      const deliveredCount = await countOrdersByStatusAndShop('Delivered', shopId);
+      const cancelledCount = await countOrdersByStatusAndShop('Cancelled', shopId);
+      const rejectedCount = await countOrdersByStatusAndShop('Rejected', shopId);
+  
+      res.status(200).json({
+        pending: pendingCount,
+        confirmed: confirmedCount,
+        shipped: shippedCount,
+        delivered: deliveredCount,
+        cancelled: cancelledCount,
+        rejected: rejectedCount,
+      });
+    } catch (error) {
+      console.error('Error fetching order counts:', error);
+      res.status(500).json({ message: 'Failed to fetch order counts' });
+    }
+  });
 
 router.get(`/`, async (req, res) => {
     try {
@@ -25,8 +59,6 @@ router.get(`/`, async (req, res) => {
         return res.status(500).json({ success: false })
     }
 });
-
-
 router.get('/:id', async (req, res) => {
 
     const orderId = req.params.id;
@@ -44,8 +76,6 @@ router.get('/:id', async (req, res) => {
         return res.status(500).json({ success: false, message: error.message });
     }
 })
-
-
 router.get(`/get/count`, async (req, res) => {
     try {
 
@@ -61,9 +91,6 @@ router.get(`/get/count`, async (req, res) => {
     }
 
 })
-
-
-
 router.post('/create', async (req, res) => {
 
     try {
@@ -184,8 +211,6 @@ router.post('/create', async (req, res) => {
     }
 
 });
-
-
 router.delete('/:id', async (req, res) => {
 
     try {
@@ -207,8 +232,6 @@ router.delete('/:id', async (req, res) => {
         return res.status(500).json({ message: "Internal server error " })
     }
 });
-
-
 router.put('/:id', async (req, res) => {
 
     try {
@@ -243,8 +266,6 @@ router.put('/:id', async (req, res) => {
         return res.status(500).json({ message: "Internal server error " })
     }
 })
-
-
 router.get('/totalRevenue', async (req, res) => {
     try {
         const orders = await Orders.find();
