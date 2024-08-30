@@ -88,20 +88,16 @@ router.post('/upload', async (req, res) => {
 
 
 router.get('/', async (req, res) => {
-
     const page = parseInt(req.query.page) || 1;
     const perPage = parseInt(req.query.perPage);
     const totalPosts = await Product.countDocuments();
     const totalPages = Math.ceil(totalPosts / perPage);
-
     if (page > totalPages) {
         return res.status(404).json({ message: "Page Not Found" })
     }
-
     let productList = [];
     if (req.query.minPrice !== undefined && req.query.maxPrice !== undefined) {
         productList = await Product.find({ subCatId: req.query.subCatId }).populate("category subCat shop Keyword");
-
         const filteredProducts = productList.filter(product => {
             if (req.query.minPrice && product.price < parseInt(+req.query.minPrice)) {
                 return false;
@@ -111,8 +107,6 @@ router.get('/', async (req, res) => {
             }
             return true;
         });
-
-
         if (!productList) {
             return res.status(500).json({ success: false })
         }
@@ -121,8 +115,6 @@ router.get('/', async (req, res) => {
             "totalPages": totalPages,
             "page": page
         });
-
-
     }
     else if (req.query.page !== undefined && req.query.perPage !== undefined) {
         productList = await Product.find().populate("category subCat shop").skip((page - 1) * perPage)
@@ -157,6 +149,35 @@ router.get('/', async (req, res) => {
     }
 
 });
+router.get('/filtered',async (req, res) => {
+    try {
+        const { category, minPrice, maxPrice, rating, size } = req.query;
+
+        let query = { category };
+
+        if (minPrice || maxPrice) {
+            query.price = {
+                $gte: parseInt(minPrice) || 0,
+                $lte: parseInt(maxPrice) || 10000,
+            };
+        }
+
+        if (rating) {
+            query.rating = { $gte: parseInt(rating) };
+        }
+
+        if (size) {
+            query.size = size;
+        }
+
+        const products = await Product.find(query).sort('price');
+        res.json({ products });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+})
+
 
 router.get('/600-or-less', async (req, res) => {
     try {

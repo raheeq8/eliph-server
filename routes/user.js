@@ -27,41 +27,30 @@ const storage = multer.diskStorage({
     },
     filename: function (req, file, cb) {
         cb(null, `${Date.now()}_${file.originalname}`);
-        //imagesArr.push(`${Date.now()}_${file.originalname}`)
-
     },
 })
 const upload = multer({ storage: storage })
 router.post(`/upload`, upload.array("images"), async (req, res) => {
     imagesArr = [];
-
     try {
-
         for (let i = 0; i < req?.files?.length; i++) {
-
             const options = {
                 use_filename: true,
                 unique_filename: false,
                 overwrite: false,
             };
-
             const img = await cloudinary.uploader.upload(req.files[i].path, options,
                 function (error, result) {
                     imagesArr.push(result?.secure_url);
                     fs.unlinkSync(`uploads/${req.files[i].filename}`);
                 });
         }
-
-
         let imagesUploaded = new ImageUpload({
             images: imagesArr,
         });
 
         imagesUploaded = await imagesUploaded.save();
         return res.status(200).json(imagesArr);
-
-
-
     } catch (error) {
         console.log(error);
     }
@@ -107,7 +96,6 @@ router.post(`/signup`, async (req, res) => {
             });
         }
         let shop;
-        // Create a shop for the user
         if (result.isAdmin === true) {
             shop = await Shop.create({
                 name: `${name}'s Shop`,

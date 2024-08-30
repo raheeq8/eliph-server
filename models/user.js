@@ -44,9 +44,9 @@ const userSchema = mongoose.Schema({
         type: Boolean,
         default: false,
     },
-    // followedShops: [{
-    //     type: String,
-    // }],
+    followedShopsId: [{
+        type: String,
+    }],
     followedShops: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Shop'
